@@ -1,7 +1,35 @@
 [
   {
+    "object": "load_stg_customers",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "result": "FAIL",
+    "sources": [
+      "https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/TRUNC-date.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/TRUNC-date.html",
+      "https://docs.oracle.com/en/database/other-databases/timesten/22.1/sql-reference/sql-reference.pdf",
+      "https://docs.snowflake.com/en/sql-reference/functions/initcap"
+    ]
+  },
+  {
     "object": "load_dim_customer",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-    "result": "PASS"
+    "result": "PASS",
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/snowconvert-docs/translation-references/oracle/pl-sql-to-snowflake-scripting/dml-statements",
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/dml-statements",
+      "https://docs.snowflake.com/en/migrations/sma-docs/translation-reference/spark-sql/spark-sql-dml/merge",
+      "https://docs.snowflake.com/sql-reference/sql/merge"
+    ]
+  },
+  {
+    "object": "load_stg_customers",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "result": "PASS",
+    "sources": [
+      "https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/TRUNC-date.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/TRUNC-date.html",
+      "https://docs.oracle.com/en/database/other-databases/timesten/22.1/sql-reference/sql-reference.pdf",
+      "https://docs.snowflake.com/en/sql-reference/functions/initcap"
+    ]
   }
 ]

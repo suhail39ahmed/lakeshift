@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pandas as pd
 import snowflake.connector
 from snowflake.connector.pandas_tools import write_pandas
@@ -13,7 +13,8 @@ def connect():
         password=os.environ["SNOWFLAKE_PASSWORD"],
         warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
         database=os.environ["SNOWFLAKE_DATABASE"],
-        schema=os.environ["SNOWFLAKE_SCHEMA"])
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        enable_server_session_keep_alive_auto_detection=False)
 
 def load_raw(conn):
     # keep_default_na=False keeps '' as '' (Snowflake behaviour), not NULL

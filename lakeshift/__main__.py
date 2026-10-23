@@ -26,6 +26,8 @@ def main():
         fixes = [l["model"].split("/")[-1] for l in log if l["object"] == name]
         how = f"fixed by {fixes[-1]}" if fixes else "first try"
         print(f"  {r['status']:5} {name:22} {how}")
+        for url in {u for l in log if l["object"] == name for u in l.get("sources", [])}:
+            print(f"         cited: {url}")
     print(f"  tokens: {sum(usage.values())}   time: {time.time()-t0:.0f}s")
 
 if __name__ == "__main__":
