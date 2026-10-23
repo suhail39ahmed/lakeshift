@@ -1,0 +1,201 @@
+customer_id,first_name,last_name,email,country,signup_date,tier_code,is_deleted
+1, raj ,tan,,IN,2023-08-17,S,N
+2, raj ,wong,User2@Mail.com,SG,2023-04-06,S,N
+3,anna,smith ,,IN,2024-04-04,B,N
+4,mei,wong,,US,2023-06-09,S,N
+5, raj ,kumar,,SG,2024-01-03,B,Y
+6,sara,tan,,,2023-05-08,X,N
+7,sara,ali,User7@Mail.com,SG,2023-02-16,S,N
+8, raj ,smith ,User8@Mail.com,UK,2023-10-12,X,N
+9,mei,ali,,IN,2024-11-17,B,N
+10,mei,smith ,User10@Mail.com,UK,2024-01-24,B,N
+11,LUCAS,ali,User11@Mail.com,IN,2025-04-21,G,N
+12,li,garcia,User12@Mail.com,IN,2024-08-03,B,N
+13,noah,wong,,IN,2023-09-29,S,N
+14,sara,wong,,US,2023-08-13,S,N
+15,noah,kumar,User15@Mail.com,SG,2023-06-06,S,N
+16, raj ,wong,,,2024-04-24,B,N
+17,anna,kumar,,US,2023-04-25,B,N
+18,mei,brown,User18@Mail.com,US,2024-05-27,S,N
+19, raj ,garcia,User19@Mail.com,IN,2024-01-18,S,N
+20,anna,ali,,SG,2023-04-25,B,N
+21,LUCAS,tan,User21@Mail.com,,2023-03-22,G,N
+22, raj ,LEE,User22@Mail.com,UK,2024-07-16,S,N
+23,li,smith ,User23@Mail.com,US,2024-02-13,B,N
+24,noah,kumar,User24@Mail.com,IN,2023-03-07,B,N
+25,LUCAS,smith ,User25@Mail.com,SG,2024-12-25,G,N
+26, raj ,tan,,SG,2024-06-10,S,N
+27,noah,smith ,User27@Mail.com,,2024-08-13,X,N
+28,noah,wong,User28@Mail.com,SG,2023-04-10,X,N
+29,li,wong,,SG,2024-11-20,G,N
+30,li,ali,User30@Mail.com,IN,2023-07-16,S,N
+31,noah,LEE,,IN,2023-10-13,X,N
+32, raj ,brown,User32@Mail.com,SG,2024-10-29,G,N
+33,LUCAS,LEE,,UK,2024-05-07,S,N
+34,anna,LEE,,SG,2024-02-04,B,N
+35,sara,wong,,IN,2023-07-14,B,N
+36,anna,tan,,SG,2023-02-21,X,N
+37,mei,tan,User37@Mail.com,IN,2023-03-12,G,N
+38,li,kumar,User38@Mail.com,,2024-08-31,G,Y
+39, raj ,wong,,US,2023-07-29,B,N
+40,sara,wong,User40@Mail.com,US,2024-04-13,B,N
+41,anna,brown,User41@Mail.com,SG,2024-07-04,S,N
+42,sara,LEE,,SG,2025-06-19,S,N
+43,sara,LEE,,,2024-12-21,B,Y
+44,anna,garcia,User44@Mail.com,IN,2023-09-28,G,N
+45,mei,garcia,,,2023-08-04,B,N
+46,sara,brown,,SG,2023-04-05,X,N
+47,anna,tan,,IN,2024-10-14,B,N
+48,noah,wong,User48@Mail.com,SG,2023-03-19,S,N
+49,anna,ali,User49@Mail.com,UK,2023-05-11,G,N
+50,omar,tan,,IN,2024-11-29,S,N
+51,omar,wong,User51@Mail.com,IN,2025-06-04,S,N
+52,li,tan,User52@Mail.com,US,2025-03-12,X,N
+53,sara,LEE,User53@Mail.com,UK,2025-06-12,G,N
+54,LUCAS,smith ,,US,2023-11-09,S,N
+55,anna,smith ,,US,2023-10-13,G,N
+56,omar,wong,,SG,2023-04-29,B,N
+57,sara,tan,User57@Mail.com,,2024-03-20,B,N
+58,li,kumar,,,2023-07-14,B,N
+59,li,tan,User59@Mail.com,US,2024-03-17,G,N
+60,omar,kumar,,,2023-11-13,X,N
+61,li,garcia,User61@Mail.com,IN,2024-03-06,X,N
+62,sara,wong,User62@Mail.com,US,2023-10-21,S,N
+63,omar,brown,,UK,2024-11-22,S,N
+64,noah,LEE,User64@Mail.com,US,2024-06-11,B,N
+65,LUCAS,garcia,User65@Mail.com,IN,2023-05-31,G,N
+66,LUCAS,brown,User66@Mail.com,UK,2024-02-29,S,N
+67,noah,wong,User67@Mail.com,IN,2024-11-02,G,N
+68,li,smith ,User68@Mail.com,,2024-04-20,G,N
+69,LUCAS,kumar,,IN,2025-03-31,X,N
+70,omar,brown,,,2024-04-01,S,N
+71,noah,garcia,User71@Mail.com,US,2025-02-23,X,N
+72,sara,brown,User72@Mail.com,US,2023-08-29,B,N
+73,omar,kumar,User73@Mail.com,IN,2023-08-25,X,N
+74,LUCAS,kumar,,UK,2023-12-05,X,N
+75,anna,smith ,,UK,2025-02-27,G,Y
+76,li,brown,User76@Mail.com,US,2023-11-02,X,N
+77,LUCAS,brown,User77@Mail.com,US,2024-03-22,X,N
+78,li,ali,,IN,2025-05-10,X,N
+79,anna,wong,User79@Mail.com,SG,2024-10-20,X,N
+80,noah,LEE,User80@Mail.com,US,2024-01-24,B,N
+81,noah,ali,,UK,2023-10-12,X,N
+82, raj ,brown,User82@Mail.com,,2023-02-23,B,N
+83, raj ,tan,User83@Mail.com,IN,2023-07-24,G,Y
+84,mei,smith ,User84@Mail.com,UK,2024-11-16,G,Y
+85,LUCAS,brown,,US,2023-06-21,G,N
+86,sara,kumar,User86@Mail.com,US,2024-08-12,X,N
+87,LUCAS,kumar,User87@Mail.com,SG,2024-12-14,B,Y
+88, raj ,tan,,,2024-03-14,B,N
+89,omar,tan,,UK,2023-04-19,X,N
+90,noah,LEE,,IN,2025-01-21,B,Y
+91,noah,brown,,,2023-10-02,B,N
+92, raj ,garcia,,IN,2025-02-07,X,Y
+93,li,ali,User93@Mail.com,UK,2025-05-21,B,N
+94,noah,smith ,,US,2023-12-15,B,Y
+95,sara,tan,User95@Mail.com,SG,2023-09-05,X,N
+96,LUCAS,brown,,UK,2025-03-22,G,N
+97,sara,smith ,,IN,2023-11-10,B,N
+98,omar,wong,,US,2024-12-20,X,N
+99,sara,garcia,User99@Mail.com,SG,2025-01-08,S,N
+100, raj ,LEE,User100@Mail.com,IN,2025-01-26,X,N
+101,sara,kumar,User101@Mail.com,US,2023-08-21,B,N
+102,sara,tan,User102@Mail.com,US,2023-02-16,G,N
+103,sara,LEE,,SG,2025-06-12,G,Y
+104,sara,brown,,UK,2023-12-15,S,N
+105,sara,brown,User105@Mail.com,SG,2024-02-15,X,N
+106,anna,LEE,User106@Mail.com,,2023-11-08,G,N
+107, raj ,wong,User107@Mail.com,,2024-01-25,X,N
+108,sara,wong,,,2024-09-27,G,Y
+109, raj ,smith ,User109@Mail.com,US,2024-11-07,G,N
+110,LUCAS,LEE,User110@Mail.com,IN,2023-01-03,X,N
+111,noah,garcia,User111@Mail.com,IN,2023-10-23,B,N
+112, raj ,smith ,,,2024-11-08,S,N
+113, raj ,smith ,User113@Mail.com,US,2025-04-26,S,N
+114,anna,LEE,,,2025-02-05,B,N
+115, raj ,brown,,UK,2023-10-06,X,N
+116, raj ,tan,,US,2024-09-10,B,N
+117, raj ,smith ,User117@Mail.com,US,2024-08-13,G,N
+118,noah,brown,,IN,2024-08-22,X,N
+119, raj ,brown,,UK,2023-12-08,B,N
+120,mei,ali,,UK,2023-10-23,X,N
+121,anna,brown,User121@Mail.com,US,2023-09-16,B,N
+122,li,tan,,UK,2023-02-25,S,N
+123,omar,brown,,SG,2023-07-28,B,N
+124,mei,garcia,,UK,2023-05-05,G,Y
+125,LUCAS,LEE,,,2023-01-15,X,N
+126,LUCAS,kumar,,SG,2024-10-25,S,N
+127,sara,garcia,,UK,2024-04-28,S,N
+128,mei,wong,User128@Mail.com,,2024-06-04,S,N
+129,sara,wong,,,2023-10-01,G,N
+130,sara,brown,User130@Mail.com,UK,2024-07-05,X,N
+131,omar,wong,,US,2025-06-09,S,N
+132,li,smith ,,SG,2023-11-22,X,N
+133,li,LEE,,SG,2023-05-10,B,N
+134,noah,kumar,,SG,2025-01-09,S,N
+135,mei,kumar,,US,2023-12-13,X,N
+136,omar,wong,,UK,2025-06-12,G,Y
+137, raj ,smith ,,IN,2025-02-03,G,N
+138, raj ,kumar,,IN,2024-12-11,B,N
+139,anna,ali,User139@Mail.com,US,2024-01-03,B,N
+140,mei,smith ,,,2024-11-29,S,N
+141,mei,kumar,,,2024-11-30,S,N
+142,mei,smith ,,US,2024-04-15,B,N
+143,noah,garcia,User143@Mail.com,SG,2024-03-28,B,Y
+144,sara,wong,,UK,2025-05-15,B,N
+145,li,brown,User145@Mail.com,IN,2024-01-26,B,Y
+146,sara,garcia,User146@Mail.com,UK,2023-10-09,G,Y
+147,anna,brown,,IN,2024-09-13,B,N
+148,LUCAS,garcia,User148@Mail.com,SG,2024-10-04,G,N
+149,noah,tan,,IN,2023-04-03,B,N
+150,li,LEE,User150@Mail.com,IN,2025-03-16,B,N
+151,sara,LEE,,UK,2025-04-05,B,N
+152, raj ,brown,User152@Mail.com,IN,2025-02-11,S,N
+153,omar,kumar,,SG,2023-09-28,G,N
+154,omar,garcia,,US,2023-04-21,S,N
+155,anna,ali,User155@Mail.com,SG,2024-10-12,X,N
+156,li,kumar,User156@Mail.com,SG,2023-02-08,B,N
+157, raj ,kumar,User157@Mail.com,,2023-05-19,X,N
+158,omar,wong,User158@Mail.com,UK,2024-11-01,G,N
+159,li,garcia,User159@Mail.com,US,2023-08-11,X,N
+160,LUCAS,ali,User160@Mail.com,US,2024-07-11,B,N
+161,li,garcia,User161@Mail.com,SG,2025-05-18,X,N
+162,LUCAS,tan,User162@Mail.com,US,2023-09-07,S,Y
+163,LUCAS,kumar,User163@Mail.com,,2023-08-10,S,N
+164,mei,tan,,IN,2023-05-14,B,N
+165, raj ,tan,User165@Mail.com,SG,2024-01-02,S,Y
+166,omar,tan,User166@Mail.com,US,2023-02-23,S,N
+167, raj ,kumar,,UK,2025-03-07,B,N
+168, raj ,brown,User168@Mail.com,,2023-02-14,B,N
+169,anna,tan,,UK,2024-03-12,G,N
+170,noah,kumar,User170@Mail.com,US,2024-09-14,S,N
+171,mei,garcia,,UK,2024-09-03,B,N
+172,li,kumar,User172@Mail.com,,2025-01-08,S,N
+173,noah,smith ,,US,2025-04-27,X,N
+174,li,kumar,,UK,2023-11-17,B,N
+175,mei,brown,User175@Mail.com,SG,2025-05-01,G,N
+176,li,kumar,,IN,2024-07-23,G,Y
+177,omar,kumar,,US,2025-06-13,X,N
+178,sara,garcia,,SG,2024-08-14,S,N
+179,noah,smith ,User179@Mail.com,US,2025-05-15,B,N
+180,sara,smith ,,,2025-02-24,G,Y
+181,sara,tan,User181@Mail.com,US,2024-12-20,B,N
+182,omar,tan,User182@Mail.com,IN,2024-08-02,X,N
+183,mei,tan,User183@Mail.com,,2023-08-09,X,N
+184,noah,ali,User184@Mail.com,US,2023-11-16,B,Y
+185, raj ,tan,User185@Mail.com,IN,2025-02-11,G,N
+186,sara,brown,,UK,2024-09-13,X,N
+187,sara,smith ,User187@Mail.com,US,2024-03-16,G,N
+188,noah,garcia,User188@Mail.com,IN,2024-02-09,G,N
+189,LUCAS,garcia,User189@Mail.com,IN,2025-02-21,B,N
+190,omar,kumar,User190@Mail.com,UK,2025-02-03,X,N
+191,mei,wong,User191@Mail.com,,2024-07-26,B,N
+192,li,tan,,SG,2024-04-15,G,N
+193,li,wong,,US,2023-04-28,X,N
+194,omar,LEE,,US,2023-04-01,X,N
+195,LUCAS,wong,,,2023-03-22,X,N
+196,omar,smith ,,IN,2023-03-20,G,N
+197,LUCAS,ali,,IN,2023-08-30,G,N
+198,sara,smith ,User198@Mail.com,,2023-06-06,G,N
+199,noah,brown,,,2024-10-20,B,N
+200,mei,brown,User200@Mail.com,UK,2024-03-28,B,N
