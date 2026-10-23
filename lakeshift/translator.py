@@ -21,6 +21,12 @@ def translate(obj, folder="legacy"):
     out.write_text(sql)
     return obj["name"], sql
 
+def translate_all(p, folder="legacy"):
+    with ThreadPoolExecutor(max_workers=4) as pool:          # parallel agents
+        results = dict(pool.map(lambda o: translate(o, folder), p["objects"]))
+    pathlib.Path("migrated/plan.json").write_text(json.dumps(p, indent=2))
+    return results
+
 if __name__ == "__main__":
     p = plan()
     with ThreadPoolExecutor(max_workers=4) as pool:          # parallel agents
