@@ -10,10 +10,10 @@
         "stg_customers"
       ],
       "risks": [
-        "INITCAP function (Oracle-specific)",
         "NVL empty-string semantics (Oracle treats '' as NULL)",
-        "TRUNC(date, 'MM') format model",
-        "DECODE null-matching quirks (vs CASE)"
+        "DECODE null matching (NULL matches NULL in search values)",
+        "INITCAP Oracle-specific function",
+        "TRUNC(date,'MM') format model"
       ]
     },
     {
@@ -26,8 +26,8 @@
         "dim_customer"
       ],
       "risks": [
-        "Oracle MERGE syntax (USING/ON/WHEN MATCHED/WHEN NOT MATCHED)",
-        "SYSDATE function"
+        "MERGE statement Oracle-specific syntax",
+        "SYSDATE session timezone dependency"
       ]
     },
     {
@@ -41,12 +41,12 @@
         "fct_sales"
       ],
       "risks": [
-        "TRUNC(date, 'MM') and TRUNC(date, 'YYYY') format models",
-        "NVL(number, 0)",
-        "RANK() OVER with aggregate in ORDER BY (Oracle extension)",
-        "ADD_MONTHS function",
-        "SYSDATE",
-        "COUNT(*) vs COUNT(*)"
+        "NVL numeric null substitution",
+        "TRUNC(date,'MM') and TRUNC(date,'YYYY') format models",
+        "ADD_MONTHS Oracle-specific date arithmetic",
+        "RANK() OVER analytic syntax",
+        "ROUND with scale parameter",
+        "SYSDATE in window anchor"
       ]
     }
   ],

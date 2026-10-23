@@ -1,0 +1,14 @@
+services:
+  oracle:
+    image: gvenzl/oracle-free:slim
+    container_name: oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}    # read from .env, never committed
+    ports:
+      - "127.0.0.1:1521:1521"                # loopback only: reachable from this laptop, nowhere else
+    networks: [lakeshift_private]
+
+networks:
+  lakeshift_private:
+    name: lakeshift_private
+    driver: bridge
