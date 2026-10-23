@@ -1,0 +1,296 @@
+{
+  "load_stg_customers": {
+    "status": "FAIL",
+    "columns": [
+      "CUSTOMER_ID",
+      "FULL_NAME",
+      "EMAIL",
+      "COUNTRY",
+      "SIGNUP_MONTH",
+      "TIER"
+    ],
+    "rows_oracle": 178,
+    "rows_snowflake": 178,
+    "mismatched": 204,
+    "sample_oracle_only": [
+      [
+        "3.00",
+        "Anna Smith",
+        "unknown@none",
+        "IN",
+        "2024-04-01",
+        "BRONZE"
+      ],
+      [
+        "6.00",
+        "Sara Tan",
+        "unknown@none",
+        "XX",
+        "2023-05-01",
+        "BRONZE"
+      ],
+      [
+        "8.00",
+        "Raj Smith",
+        "user8@mail.com",
+        "UK",
+        "2023-10-01",
+        "BRONZE"
+      ],
+      [
+        "9.00",
+        "Mei Ali",
+        "unknown@none",
+        "IN",
+        "2024-11-01",
+        "BRONZE"
+      ],
+      [
+        "10.00",
+        "Mei Smith",
+        "user10@mail.com",
+        "UK",
+        "2024-01-01",
+        "BRONZE"
+      ]
+    ],
+    "sample_snowflake_only": [
+      [
+        "3.00",
+        "Anna Smith",
+        "unknown@none",
+        "IN",
+        "2024-04-01",
+        "\u2205"
+      ],
+      [
+        "6.00",
+        "Sara Tan",
+        "unknown@none",
+        "XX",
+        "2023-05-01",
+        "\u2205"
+      ],
+      [
+        "8.00",
+        "Raj Smith",
+        "user8@mail.com",
+        "UK",
+        "2023-10-01",
+        "\u2205"
+      ],
+      [
+        "9.00",
+        "Mei Ali",
+        "unknown@none",
+        "IN",
+        "2024-11-01",
+        "\u2205"
+      ],
+      [
+        "10.00",
+        "Mei Smith",
+        "user10@mail.com",
+        "UK",
+        "2024-01-01",
+        "\u2205"
+      ]
+    ]
+  },
+  "load_dim_customer": {
+    "status": "FAIL",
+    "columns": [
+      "CUSTOMER_ID",
+      "FULL_NAME",
+      "EMAIL",
+      "COUNTRY",
+      "TIER"
+    ],
+    "rows_oracle": 178,
+    "rows_snowflake": 178,
+    "mismatched": 204,
+    "sample_oracle_only": [
+      [
+        "3.00",
+        "Anna Smith",
+        "unknown@none",
+        "IN",
+        "BRONZE"
+      ],
+      [
+        "6.00",
+        "Sara Tan",
+        "unknown@none",
+        "XX",
+        "BRONZE"
+      ],
+      [
+        "8.00",
+        "Raj Smith",
+        "user8@mail.com",
+        "UK",
+        "BRONZE"
+      ],
+      [
+        "9.00",
+        "Mei Ali",
+        "unknown@none",
+        "IN",
+        "BRONZE"
+      ],
+      [
+        "10.00",
+        "Mei Smith",
+        "user10@mail.com",
+        "UK",
+        "BRONZE"
+      ]
+    ],
+    "sample_snowflake_only": [
+      [
+        "3.00",
+        "Anna Smith",
+        "unknown@none",
+        "IN",
+        "\u2205"
+      ],
+      [
+        "6.00",
+        "Sara Tan",
+        "unknown@none",
+        "XX",
+        "\u2205"
+      ],
+      [
+        "8.00",
+        "Raj Smith",
+        "user8@mail.com",
+        "UK",
+        "\u2205"
+      ],
+      [
+        "9.00",
+        "Mei Ali",
+        "unknown@none",
+        "IN",
+        "\u2205"
+      ],
+      [
+        "10.00",
+        "Mei Smith",
+        "user10@mail.com",
+        "UK",
+        "\u2205"
+      ]
+    ]
+  },
+  "load_fct_sales": {
+    "status": "FAIL",
+    "columns": [
+      "ORDER_MONTH",
+      "COUNTRY",
+      "TIER",
+      "ORDERS",
+      "REVENUE",
+      "AVG_ORDER",
+      "RANK_IN_COUNTRY"
+    ],
+    "rows_oracle": 325,
+    "rows_snowflake": 325,
+    "mismatched": 228,
+    "sample_oracle_only": [
+      [
+        "2025-01-01",
+        "IN",
+        "BRONZE",
+        "12.00",
+        "1464.83",
+        "122.07",
+        "2.00"
+      ],
+      [
+        "2025-02-01",
+        "IN",
+        "BRONZE",
+        "9.00",
+        "942.56",
+        "104.73",
+        "1.00"
+      ],
+      [
+        "2025-03-01",
+        "IN",
+        "BRONZE",
+        "18.00",
+        "2419.12",
+        "134.40",
+        "1.00"
+      ],
+      [
+        "2025-04-01",
+        "IN",
+        "BRONZE",
+        "11.00",
+        "1576.74",
+        "143.34",
+        "1.00"
+      ],
+      [
+        "2025-05-01",
+        "IN",
+        "BRONZE",
+        "17.00",
+        "2060.86",
+        "121.23",
+        "1.00"
+      ]
+    ],
+    "sample_snowflake_only": [
+      [
+        "2025-01-01",
+        "IN",
+        "\u2205",
+        "12.00",
+        "1464.83",
+        "122.07",
+        "2.00"
+      ],
+      [
+        "2025-02-01",
+        "IN",
+        "\u2205",
+        "9.00",
+        "942.56",
+        "104.73",
+        "1.00"
+      ],
+      [
+        "2025-03-01",
+        "IN",
+        "\u2205",
+        "18.00",
+        "2419.12",
+        "134.40",
+        "1.00"
+      ],
+      [
+        "2025-04-01",
+        "IN",
+        "\u2205",
+        "11.00",
+        "1576.74",
+        "143.34",
+        "1.00"
+      ],
+      [
+        "2025-05-01",
+        "IN",
+        "\u2205",
+        "17.00",
+        "2060.86",
+        "121.23",
+        "1.00"
+      ]
+    ]
+  }
+}
