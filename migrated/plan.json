@@ -1,0 +1,58 @@
+{
+  "objects": [
+    {
+      "name": "load_stg_customers",
+      "file": "01_stg_customers.sql",
+      "reads": [
+        "raw_customers"
+      ],
+      "writes": [
+        "stg_customers"
+      ],
+      "risks": [
+        "INITCAP function (Oracle-specific)",
+        "NVL empty-string semantics (Oracle treats '' as NULL)",
+        "TRUNC(date, 'MM') format model",
+        "DECODE null-matching quirks (vs CASE)"
+      ]
+    },
+    {
+      "name": "load_dim_customer",
+      "file": "02_dim_customer.sql",
+      "reads": [
+        "stg_customers"
+      ],
+      "writes": [
+        "dim_customer"
+      ],
+      "risks": [
+        "Oracle MERGE syntax (USING/ON/WHEN MATCHED/WHEN NOT MATCHED)",
+        "SYSDATE function"
+      ]
+    },
+    {
+      "name": "load_fct_sales",
+      "file": "03_fct_sales.sql",
+      "reads": [
+        "raw_orders",
+        "dim_customer"
+      ],
+      "writes": [
+        "fct_sales"
+      ],
+      "risks": [
+        "TRUNC(date, 'MM') and TRUNC(date, 'YYYY') format models",
+        "NVL(number, 0)",
+        "RANK() OVER with aggregate in ORDER BY (Oracle extension)",
+        "ADD_MONTHS function",
+        "SYSDATE",
+        "COUNT(*) vs COUNT(*)"
+      ]
+    }
+  ],
+  "run_order": [
+    "load_stg_customers",
+    "load_dim_customer",
+    "load_fct_sales"
+  ]
+}
