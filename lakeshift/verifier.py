@@ -40,6 +40,13 @@ def sf_fetch(cur, table):
     cur.execute(f"SELECT * FROM {table}")
     return [d[0] for d in cur.description], cur.fetchall()
 
+def seed(scur, table, truth_table):
+    cols, rows = truth_table
+    scur.execute(f"TRUNCATE TABLE {table}")
+    if rows:
+        ph = ",".join(["%s"] * len(cols))
+        scur.executemany(f"INSERT INTO {table} ({','.join(cols)}) VALUES ({ph})", rows)
+
 def verify(plan, sql_by_name):
     # 1. truth: run untouched legacy code in Oracle
     with oracle_ref.connect() as oconn:
@@ -58,6 +65,9 @@ def verify(plan, sql_by_name):
         for name in plan["run_order"]:
             obj = next(o for o in plan["objects"] if o["name"] == name)
             target = obj["writes"][0].lower()
+            for src in obj["reads"]:
+                if src.lower() in truth:      # upstream we produced: use Oracle's truth
+                    seed(scur, src.lower(), truth[src.lower()])
             sql = sql_by_name[name].strip().rstrip(";")
             try:
                 scur.execute(f"INSERT OVERWRITE INTO {target} {sql}")

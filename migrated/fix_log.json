@@ -1,0 +1,22 @@
+[
+  {
+    "object": "load_stg_customers",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "result": "PASS"
+  },
+  {
+    "object": "load_fct_sales",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "result": "FAIL"
+  },
+  {
+    "object": "load_fct_sales",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "result": "FAIL"
+  },
+  {
+    "object": "load_fct_sales",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "result": "FAIL"
+  }
+]

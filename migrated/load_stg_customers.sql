@@ -7,7 +7,7 @@ SELECT
     CASE
         WHEN c.tier_code = 'G' THEN 'GOLD'
         WHEN c.tier_code = 'S' THEN 'SILVER'
-        WHEN c.tier_code = 'BRONZE' THEN 'BRONZE'
+        ELSE 'BRONZE'
     END AS tier
 FROM raw_customers c
 WHERE c.is_deleted = 'N';

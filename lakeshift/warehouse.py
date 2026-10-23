@@ -26,6 +26,12 @@ def load_raw(conn):
         else:
             df["SIGNUP_DATE"] = pd.to_datetime(df["SIGNUP_DATE"]).dt.date
         write_pandas(conn, df, name.upper(), auto_create_table=True, overwrite=True)
+        if name == "raw_orders":   # Oracle NUMBER is exact decimal: never FLOAT
+            conn.cursor().execute("""
+                CREATE OR REPLACE TABLE RAW_ORDERS AS
+                SELECT ORDER_ID, CUSTOMER_ID, ORDER_DATE,
+                AMOUNT::NUMBER(12,2) AS AMOUNT, STATUS
+                FROM RAW_ORDERS""")
         print(f"loaded {name}: {len(df)} rows")
 
 if __name__ == "__main__":
