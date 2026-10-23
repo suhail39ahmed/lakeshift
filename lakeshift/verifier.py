@@ -11,6 +11,11 @@ SF_DDL = {
 }
 IGNORE = {"UPDATED_AT"}          # load timestamps never match across systems
 
+DAY2 = [   # simulated changes between loads
+    "UPDATE raw_customers SET tier_code = 'G' WHERE MOD(customer_id, 7) = 0",
+    "UPDATE raw_customers SET last_name = 'Changed' WHERE MOD(customer_id, 11) = 0",
+]
+
 def fmt(v):
     if v is None: return "∅"
     if isinstance(v, datetime): return v.date().isoformat()
@@ -54,6 +59,15 @@ def verify(plan, sql_by_name):
         oracle_ref.reset(ocur); oracle_ref.load(ocur)
         oracle_ref.run_legacy(ocur, plan); oconn.commit()
         truth = {t: oracle_ref.fetch(ocur, t) for t in SF_DDL}
+            # day 2: source changes, staging reloaded, MERGE runs against a populated dim
+        dim_day1 = truth["dim_customer"]
+        for stmt in DAY2:
+            ocur.execute(stmt)
+        ocur.execute("TRUNCATE TABLE stg_customers")   # the scheduler's pre-step
+        ocur.callproc("load_stg_customers")
+        ocur.callproc("load_dim_customer")
+        oconn.commit()
+        day2 = {t: oracle_ref.fetch(ocur, t) for t in ["stg_customers", "dim_customer"]}
 
     # 2. candidate: run translated SQL in Snowflake, in planner order
     report = {}
@@ -75,6 +89,21 @@ def verify(plan, sql_by_name):
                 report[name] = compare(normalize(*truth[target]), normalize(*cand))
             except Exception as e:
                 report[name] = {"status": "ERROR", "reason": str(e)[:500]}
+                # day-2 scenario for the dimension (only if day 1 passed)
+        if report.get("load_dim_customer", {}).get("status") == "PASS":
+            seed(scur, "stg_customers", day2["stg_customers"])
+            seed(scur, "dim_customer", dim_day1)
+            sql = sql_by_name["load_dim_customer"].strip().rstrip(";")
+            try:
+                scur.execute(f"INSERT OVERWRITE INTO dim_customer {sql}")
+                r = compare(normalize(*day2["dim_customer"]),
+                            normalize(*sf_fetch(scur, "dim_customer")))
+            except Exception as e:
+                r = {"status": "ERROR", "reason": str(e)[:500]}
+            if r["status"] != "PASS":
+                r["scenario"] = ("day 2 incremental load: dim_customer already holds "
+                                 "day-1 rows; legacy MERGE updates matched rows")
+                report["load_dim_customer"] = r
     finally:
         sconn.close()
     return report
