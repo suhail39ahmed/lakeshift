@@ -6,7 +6,10 @@ Given legacy Oracle PL/SQL procedures, return ONLY JSON:
 {"objects":[{"name":str,"file":str,"reads":[str],"writes":[str],
   "risks":[str]}],"run_order":[str]}
 risks = Oracle-specific features that are easy to mistranslate
-(e.g. NVL empty-string semantics, DECODE null matching)."""
+(e.g. NVL empty-string semantics, DECODE null matching).
+name = the PROCEDURE name (a file may also hold a PACKAGE it depends on).
+writes = the target table the procedure inserts into.
+run_order must put every object after the objects that write the tables it reads."""
 
 def plan(folder="legacy"):
     files = sorted(pathlib.Path(folder).glob("*.sql"))

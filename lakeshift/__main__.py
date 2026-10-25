@@ -1,4 +1,4 @@
-import argparse, json, pathlib, time
+﻿import argparse, json, pathlib, time
 from lakeshift import planner, translator, fixer
 from lakeshift.llm import usage
 
@@ -19,12 +19,17 @@ def main():
     print("3/3 verifying and fixing...")
     fixer.run()
 
-    report = json.loads(pathlib.Path("migrated/report.json").read_text())
-    log = json.loads(pathlib.Path("migrated/fix_log.json").read_text())
+    report = json.loads(pathlib.Path("migrated/report.json").read_text(encoding="utf-8"))
+    log = json.loads(pathlib.Path("migrated/fix_log.json").read_text(encoding="utf-8"))
     print("\n=========== LakeShift scorecard ===========")
     for name, r in report.items():
         fixes = [l["model"].split("/")[-1] for l in log if l["object"] == name]
-        how = f"fixed by {fixes[-1]}" if fixes else "first try"
+        if not fixes:
+            how = "first try"
+        elif r["status"] == "PASS":
+            how = f"fixed by {fixes[-1]} (attempt {len(fixes)})"
+        else:
+            how = f"unsolved, last tried by {fixes[-1]}"
         print(f"  {r['status']:5} {name:22} {how}")
         for url in {u for l in log if l["object"] == name for u in l.get("sources", [])}:
             print(f"         cited: {url}")

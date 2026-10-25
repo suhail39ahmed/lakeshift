@@ -1,4 +1,4 @@
-import csv, os, pathlib
+import csv, os, pathlib, re
 from datetime import date
 import oracledb
 from dotenv import load_dotenv
@@ -15,6 +15,14 @@ DDL = [
     email VARCHAR2(100), country VARCHAR2(10), signup_month DATE, tier VARCHAR2(10))""",
  """CREATE TABLE dim_customer (customer_id NUMBER, full_name VARCHAR2(200),
     email VARCHAR2(100), country VARCHAR2(10), tier VARCHAR2(10), updated_at DATE)""",
+ """CREATE TABLE raw_referrals (customer_id NUMBER, referred_by NUMBER)""",
+ """CREATE TABLE customer_points (customer_id NUMBER, order_id NUMBER, order_date DATE,
+    points NUMBER, balance NUMBER, points_per_day NUMBER)""",
+ """CREATE TABLE referral_tree (customer_id NUMBER, root_id NUMBER, depth NUMBER,
+    path VARCHAR2(400), is_leaf NUMBER)""",
+ """CREATE TABLE order_gaps (customer_id NUMBER, order_id NUMBER, order_date DATE,
+    prev_order_date DATE, days_since_prev NUMBER, months_since_prev NUMBER,
+    next_expected DATE, avg_gap_days NUMBER)""",
  """CREATE TABLE fct_sales (order_month DATE, country VARCHAR2(10), tier VARCHAR2(10),
     orders NUMBER, revenue NUMBER, avg_order NUMBER, rank_in_country NUMBER)""",
 ]
@@ -24,7 +32,8 @@ def connect():
                             dsn="localhost:1521/FREEPDB1")
 
 def reset(cur):
-    for t in ["raw_customers", "raw_orders", "stg_customers", "dim_customer", "fct_sales"]:
+    for t in ["raw_customers", "raw_orders", "raw_referrals", "stg_customers", "dim_customer",
+              "fct_sales", "customer_points", "referral_tree", "order_gaps"]:
         try:
             cur.execute(f"DROP TABLE {t} PURGE")
         except oracledb.DatabaseError:
@@ -41,11 +50,23 @@ def load(cur):
     cur.executemany("INSERT INTO raw_orders VALUES (:1,:2,:3,:4,:5)",
         [(int(r["order_id"]), int(r["customer_id"]), date.fromisoformat(r["order_date"]),
           float(r["amount"]) if r["amount"] else None, r["status"]) for r in rows])
+    rows = list(csv.DictReader(open("data/raw_referrals.csv")))
+    cur.executemany("INSERT INTO raw_referrals VALUES (:1,:2)",
+        [(int(r["customer_id"]), int(r["referred_by"]) if r["referred_by"] else None) for r in rows])
+
+def statements(text):
+    """A legacy file may hold several CREATE statements separated by a line with only '/'."""
+    parts = re.split(r"(?m)^\s*/\s*$", text)
+    return [p.strip() for p in parts if p.strip()]
 
 def run_legacy(cur, plan):
     for name in plan["run_order"]:
         obj = next(o for o in plan["objects"] if o["name"] == name)
-        cur.execute(pathlib.Path("legacy", obj["file"]).read_text())  # create the proc as-is
+        for stmt in statements(pathlib.Path("legacy", obj["file"]).read_text()):
+            cur.execute(stmt)                                         # create package/proc as-is
+        cur.execute("SELECT name || ': ' || text FROM user_errors WHERE ROWNUM = 1")
+        if (err := cur.fetchone()):
+            raise RuntimeError(f"{obj['file']}: did not compile: {err[0]}")
         cur.callproc(name)                                            # run it
         print(f"oracle ran {name}")
 
@@ -60,6 +81,6 @@ if __name__ == "__main__":
     with connect() as conn:
         cur = conn.cursor()
         reset(cur); load(cur); run_legacy(cur, plan); conn.commit()
-        for t in ["stg_customers", "dim_customer", "fct_sales"]:
+        for t in ["stg_customers", "dim_customer", "fct_sales", "customer_points", "referral_tree", "order_gaps"]:
             cols, rows = fetch(cur, t)
             print(t, len(rows), "rows")

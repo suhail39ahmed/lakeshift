@@ -7,6 +7,9 @@ from lakeshift import oracle_ref, warehouse
 SF_DDL = {
  "stg_customers": "CUSTOMER_ID NUMBER, FULL_NAME VARCHAR, EMAIL VARCHAR, COUNTRY VARCHAR, SIGNUP_MONTH DATE, TIER VARCHAR",
  "dim_customer":  "CUSTOMER_ID NUMBER, FULL_NAME VARCHAR, EMAIL VARCHAR, COUNTRY VARCHAR, TIER VARCHAR, UPDATED_AT DATE",
+ "customer_points": "CUSTOMER_ID NUMBER, ORDER_ID NUMBER, ORDER_DATE DATE, POINTS NUMBER, BALANCE NUMBER, POINTS_PER_DAY NUMBER(18,2)",
+ "referral_tree": "CUSTOMER_ID NUMBER, ROOT_ID NUMBER, DEPTH NUMBER, PATH VARCHAR, IS_LEAF NUMBER",
+ "order_gaps": "CUSTOMER_ID NUMBER, ORDER_ID NUMBER, ORDER_DATE DATE, PREV_ORDER_DATE DATE, DAYS_SINCE_PREV NUMBER, MONTHS_SINCE_PREV NUMBER(18,2), NEXT_EXPECTED DATE, AVG_GAP_DAYS NUMBER(18,2)",
  "fct_sales":     "ORDER_MONTH DATE, COUNTRY VARCHAR, TIER VARCHAR, ORDERS NUMBER, REVENUE NUMBER(18,2), AVG_ORDER NUMBER(18,2), RANK_IN_COUNTRY NUMBER",
 }
 IGNORE = {"UPDATED_AT"}          # load timestamps never match across systems
@@ -85,7 +88,8 @@ def verify(plan, sql_by_name):
             scur.execute(f"CREATE OR REPLACE TABLE {t} ({cols})")
         for name in plan["run_order"]:
             obj = next(o for o in plan["objects"] if o["name"] == name)
-            target = obj["writes"][0].lower()
+            target = next((w.lower() for w in obj["writes"] if w.lower() in SF_DDL),
+                          obj["writes"][0].lower())
             for src in obj["reads"]:
                 if src.lower() in truth:      # upstream we produced: use Oracle's truth
                     seed(scur, src.lower(), truth[src.lower()])

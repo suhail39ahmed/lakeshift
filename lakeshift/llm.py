@@ -1,4 +1,4 @@
-import os
+﻿import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -14,7 +14,7 @@ usage = {}
 def chat(model, system, user, retries=2):
     for attempt in range(retries + 1):
         r = client.chat.completions.create(
-            model=model, temperature=0, max_tokens=4096,
+            model=model, temperature=0, max_tokens=12000,
             messages=[{"role": "system", "content": system},
                       {"role": "user", "content": user}])
         usage[model] = usage.get(model, 0) + r.usage.total_tokens

@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+migrated/replies/
+migrated/rejected/
+explore.py

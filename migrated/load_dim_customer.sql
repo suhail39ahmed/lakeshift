@@ -1,45 +1,10 @@
-WITH src AS (
-  SELECT s.customer_id,
-         s.full_name,
-         s.email,
-         s.country,
-         s.tier
-  FROM stg_customers s
-),
-matched AS (
-  SELECT d.customer_id,
-         src.full_name,
-         d.email,
-         d.country,
-         src.tier,
-         CURRENT_DATE() AS updated_at
-  FROM dim_customer d
-  JOIN src ON d.customer_id = src.customer_id
-),
-unchanged AS (
-  SELECT d.customer_id,
-         d.full_name,
-         d.email,
-         d.country,
-         d.tier,
-         d.updated_at
-  FROM dim_customer d
-  LEFT JOIN src ON d.customer_id = src.customer_id
-  WHERE src.customer_id IS NULL
-),
-inserted AS (
-  SELECT src.customer_id,
-         src.full_name,
-         src.email,
-         src.country,
-         src.tier,
-         CURRENT_DATE() AS updated_at
-  FROM src
-  LEFT JOIN dim_customer d ON d.customer_id = src.customer_id
-  WHERE d.customer_id IS NULL
-)
-SELECT customer_id, full_name, email, country, tier, updated_at FROM matched
-UNION ALL
-SELECT customer_id, full_name, email, country, tier, updated_at FROM unchanged
-UNION ALL
-SELECT customer_id, full_name, email, country, tier, updated_at FROM inserted;
+SELECT
+    COALESCE(s.customer_id, d.customer_id) AS customer_id,
+    COALESCE(s.full_name, d.full_name) AS full_name,
+    COALESCE(s.email, d.email) AS email,
+    COALESCE(s.country, d.country) AS country,
+    COALESCE(s.tier, d.tier) AS tier,
+    CASE WHEN s.customer_id IS NOT NULL THEN CURRENT_DATE() ELSE d.updated_at END AS updated_at
+FROM dim_customer d
+FULL OUTER JOIN stg_customers s
+  ON d.customer_id = s.customer_id
