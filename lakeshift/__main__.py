@@ -33,7 +33,11 @@ def main():
         print(f"  {r['status']:5} {name:22} {how}")
         for url in {u for l in log if l["object"] == name for u in l.get("sources", [])}:
             print(f"         cited: {url}")
-    print(f"  tokens: {sum(usage.values())}   time: {time.time()-t0:.0f}s")
+    secs = round(time.time() - t0)
+    pathlib.Path("migrated/usage.json").write_text(json.dumps(
+        {"tokens": {k.split("/")[-1]: v for k, v in usage.items()}, "seconds": secs}, indent=2),
+        encoding="utf-8")
+    print(f"  tokens: {sum(usage.values())}   time: {secs}s")
 
 if __name__ == "__main__":
     main()
