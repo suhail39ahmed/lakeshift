@@ -108,8 +108,11 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 
 ## Security
 
-- **Private source database.** Oracle runs in Docker on a private network, bound to
-  `127.0.0.1` only (`docker-compose.yml`). It is never reachable from outside the machine.
+- **Private source database.** In private mode, Oracle runs in Docker on a private network,
+  bound to `127.0.0.1` only (`docker-compose.yml`). It is never reachable from outside the machine.
+- **Synthetic judge demo database.** The only Oracle reachable from the internet is a separate
+  demo instance on a Google Cloud VM. It holds only synthetic sample data, uses a non-admin demo
+  user, and live runs need a judge access code and are capped per day.
 - **No customer data sent to models.** Text values in verifier reports are masked before any
   model call (`lakeshift/privacy.py`). Models see shapes like `<text#a1b2c3 len=9 Mixed>`,
   never names or emails. Numbers, dates and empty strings stay visible because they carry the
@@ -123,17 +126,56 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 
 ### Production design: bring the code to the data
 
-The hosted page never connects to Oracle. In production it would queue a job (for example in a
+With real data, the hosted page never connects to Oracle. In production it would queue a job (for example in a
 Snowflake table); a worker next to the database picks it up, runs the Oracle side locally and
 writes back only the PASS/FAIL scorecard. Oracle accepts no outside connection and no customer
 rows leave the site. Options considered:
 
-- Opening port 1521 to the internet: never.
+- Opening port 1521 to the internet: never for real data. The hackathon demo database holds
+  only synthetic sample rows (see "Cloud demo database").
 - A VPN such as Tailscale: fine for teams, but hosted apps cannot join it.
 - Cloudflare Tunnel with Cloudflare Access: outbound-only and login-gated, but more moving parts.
 
 ### Demo modes
 
-The full live pipeline runs where the private Oracle lives (recorded on the laptop). The hosted
-page replays the last verified run and makes live Nemotron calls. The Oracle database is
-intentionally never exposed.
+1. **Private mode.** Oracle runs on the laptop, bound to `127.0.0.1` on a private Docker
+   network. This is how the run was recorded and how a team would use LakeShift on real data.
+2. **Judge demo.** The hosted Streamlit page replays the last verified run, makes live Nemotron
+   calls, and can run the full live migration against a synthetic-data Oracle on a Google Cloud
+   VM, guarded by a judge access code and a daily run cap.
+
+### Cloud demo database
+
+For judging, a throwaway Oracle with synthetic data runs on a Google Cloud VM (`e2-medium`, `asia-south1`)
+(setup: [`docs/cloud-oracle-setup.md`](docs/cloud-oracle-setup.md)). Configure it with these
+variables in `.env` or Streamlit secrets; all have local defaults, so local use is unchanged.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ORACLE_HOST` | `127.0.0.1` | Oracle host |
+| `ORACLE_PORT` | `1521` | Oracle port |
+| `ORACLE_USER` | `system` | Oracle user (use a dedicated demo user in the cloud) |
+| `ORACLE_PASSWORD` | (required) | Oracle password |
+| `ORACLE_SERVICE` | `FREEPDB1` | Service name |
+| `JUDGE_ACCESS_CODE` | (none) | If set, the live run button asks for this code |
+| `LIVE_RUNS_PER_DAY` | `10` | Daily cap on live runs |
+
+Live runs work in a scratch copy, so the committed `migrated/` results shown on the page are
+never overwritten.
+
+## Dedicated endpoint (optional)
+
+LakeShift runs on serverless Token Factory by default. Nemotron 3 Nano can also run on a
+**dedicated endpoint** (reserved GPU, fixed region for data residency, no rate limits, billed per
+GPU-minute while ready). Only two environment variables change; Super and Ultra stay serverless:
+
+```powershell
+$env:NEBIUS_NANO_MODEL = "<routing key>"
+$env:NEBIUS_DEDICATED_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
+python -m lakeshift.bench --target dedicated --runs 1
+```
+
+`python -m lakeshift.bench --target serverless|dedicated [--runs N] [--limit N]` times the Nano
+translation step (latency, time to first token, tokens/s) and writes `migrated/bench_<target>.json`,
+which the app shows in the **Dedicated endpoint** tab. Step-by-step guide and cost:
+[docs/dedicated-endpoint.md](docs/dedicated-endpoint.md).

@@ -1,0 +1,25 @@
+{
+  "target": "serverless",
+  "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+  "max_tokens": 1500,
+  "timestamp": "2026-10-25T15:29:18",
+  "summary": {
+    "calls": 1,
+    "median_latency_s": 12.858,
+    "median_ttft_s": 1.098,
+    "median_tokens_per_s": 127.5,
+    "total_prompt_tokens": 324,
+    "total_completion_tokens": 1500
+  },
+  "calls": [
+    {
+      "latency_s": 12.858,
+      "ttft_s": 1.098,
+      "prompt_tokens": 324,
+      "completion_tokens": 1500,
+      "tokens_per_s": 127.5,
+      "object": "load_stg_customers",
+      "run": 1
+    }
+  ]
+}

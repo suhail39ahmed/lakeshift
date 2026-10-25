@@ -1,5 +1,5 @@
 """LakeShift demo page: Oracle PL/SQL to Snowflake, proven row by row."""
-import json, pathlib, subprocess, sys
+import datetime, json, os, pathlib, shutil, socket, subprocess, sys, tempfile
 import streamlit as st
 
 M = pathlib.Path("migrated")
@@ -11,6 +11,14 @@ PRICE = {  # USD per 1M tokens (input, output), Nebius Token Factory
 LABEL = {"NVIDIA-Nemotron-3-Nano-30B-A3B": "Nano", "nemotron-3-super-120b-a12b": "Super",
          "Nemotron-3-Ultra-550b-a55b": "Ultra"}
 
+# Hosted deployments keep settings in st.secrets; expose them as env vars for the pipeline.
+try:
+    for _k, _v in st.secrets.items():
+        if isinstance(_v, (str, int, float)):
+            os.environ.setdefault(_k, str(_v))
+except Exception:
+    pass                                       # no secrets file: local run, .env is used
+
 st.set_page_config(page_title="LakeShift", page_icon="🌊", layout="wide")
 st.title("🌊 LakeShift")
 st.caption("Legacy Oracle PL/SQL to Snowflake SQL, translated by NVIDIA Nemotron on Nebius "
@@ -20,27 +28,67 @@ def load(name):
     p = M / name
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
 
-# --- optional live run (only where the private Oracle is reachable, i.e. the laptop) ---
+# --- optional live run (only where the demo Oracle is reachable) ---
+ROOT = pathlib.Path(__file__).resolve().parent
+RUNS_FILE = pathlib.Path(tempfile.gettempdir()) / "lakeshift_live_runs.json"
+RUN_CAP = int(os.environ.get("LIVE_RUNS_PER_DAY", "10"))
+
+def runs_today():
+    today = datetime.date.today().isoformat()
+    try:
+        data = json.loads(RUNS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    return today, int(data.get(today, 0))
+
+def count_run():
+    today, n = runs_today()
+    RUNS_FILE.write_text(json.dumps({today: n + 1}), encoding="utf-8")
+
+def live_workdir():
+    """Copy inputs to a scratch folder so a live run never overwrites the committed results."""
+    work = pathlib.Path(tempfile.mkdtemp(prefix="lakeshift_run_"))
+    shutil.copytree(ROOT / "legacy", work / "legacy")
+    shutil.copytree(ROOT / "data", work / "data")
+    shutil.copytree(M if M.is_absolute() else ROOT / M, work / "migrated",
+                    ignore=shutil.ignore_patterns("replies", "rejected"))
+    return work
+
 with st.sidebar:
     st.header("Run")
-    st.write("The hosted page replays the last verified run. "
-             "Live runs need the private Oracle database, which never leaves the laptop.")
-    import socket
+    st.write("The page shows the last verified run. A live run plans, translates and "
+             "verifies everything again against the demo Oracle database.")
+    o_host = os.environ.get("ORACLE_HOST", "127.0.0.1")
+    o_port = int(os.environ.get("ORACLE_PORT", "1521"))
     try:
-        socket.create_connection(("127.0.0.1", 1521), timeout=0.5).close(); oracle_here = True
+        socket.create_connection((o_host, o_port), timeout=2).close(); oracle_here = True
     except OSError:
         oracle_here = False
     if not oracle_here:
-        st.caption("Private Oracle not reachable from here, so live full runs are off.")
-    if oracle_here and st.button("Run migration live", type="primary"):
-        with st.status("Planning, translating, verifying...", expanded=True) as s:
-            proc = subprocess.Popen([sys.executable, "-m", "lakeshift", "run"],
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                    text=True, encoding="utf-8", errors="replace")
-            for line in proc.stdout:
-                st.text(line.rstrip())
-            s.update(label="Run finished" if proc.wait() == 0 else "Run failed",
-                     state="complete" if proc.returncode == 0 else "error")
+        st.caption("Demo Oracle not reachable from here, so live full runs are off.")
+    else:
+        _, used = runs_today()
+        left = max(RUN_CAP - used, 0)
+        st.caption(f"Live runs left today: {left} / {RUN_CAP}")
+        code = os.environ.get("JUDGE_ACCESS_CODE", "")
+        entered = st.text_input("Access code", type="password") if code else ""
+        allowed = (not code or entered == code) and left > 0
+        if code and entered and entered != code:
+            st.error("Wrong access code.")
+        if st.button("Run migration live", type="primary", disabled=not allowed):
+            count_run()
+            work = live_workdir()
+            env = dict(os.environ, PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""))
+            with st.status("Planning, translating, verifying...", expanded=True) as s:
+                proc = subprocess.Popen([sys.executable, "-m", "lakeshift", "run"], cwd=work, env=env,
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                        text=True, encoding="utf-8", errors="replace")
+                for line in proc.stdout:
+                    st.text(line.rstrip())
+                s.update(label="Run finished" if proc.wait() == 0 else "Run failed",
+                         state="complete" if proc.returncode == 0 else "error")
+            st.caption("Live results are shown above; the tabs keep showing the verified run.")
+            shutil.rmtree(work, ignore_errors=True)
 
 report, log, plan = load("report.json"), load("fix_log.json") or [], load("plan.json")
 if not report:
@@ -67,7 +115,7 @@ c4.metric("Raw customer values sent to models", 0)
 
 
 tabs = st.tabs(["Overview", "Scorecard", "Inside an object", "Try it live",
-                "Why Nebius + Nemotron", "Where this applies", "Security"])
+                "Why Nebius + Nemotron", "Dedicated endpoint", "Where this applies", "Security"])
 
 with tabs[0]:
     st.image("docs/architecture.png", width="stretch")
@@ -86,9 +134,11 @@ Snowflake on the same data and must return exactly the same rows before it count
 4. On a mismatch, the **Researcher** pulls official Oracle and Snowflake docs through Tavily,
    and the **Fixer** climbs the ladder Nano, then Super, then Ultra, until the proof passes.
 """)
-    st.info("**Demo modes.** The full live pipeline runs where the private Oracle lives (recorded on "
-            "the laptop). This hosted page replays the last verified run and makes live Nemotron "
-            "calls in *Try it live*. The Oracle database is intentionally never exposed.")
+    st.info("**Two demo modes.** *Private mode:* Oracle runs on the laptop, bound to 127.0.0.1 on a "
+            "private Docker network (how the run was recorded). *Judge demo:* a separate Oracle on a "
+            "Google Cloud VM holds only synthetic sample data, with a non-admin demo user, so this hosted "
+            "page can run the full live migration, guarded by an access code and a daily run cap. "
+            "Real customer data never leaves the customer network.")
 
 with tabs[1]:
     # --- scorecard ---
@@ -149,15 +199,15 @@ with tabs[3]:
     snippet = st.text_area("Oracle SQL / PL/SQL", EXAMPLE, height=180, max_chars=4000)
     if st.button("Translate with Nemotron"):
         try:
-            from lakeshift.llm import chat, NANO, usage
+            from lakeshift.llm import chat, NANO, usage as llm_usage
             from lakeshift.fixer import clean
             system = ("You translate Oracle SQL or PL/SQL to Snowflake SQL. Preserve Oracle semantics "
                       "exactly (in Oracle '' IS NULL). Return only the Snowflake SQL, no explanations.")
             with st.spinner("Calling NVIDIA Nemotron Nano on Nebius Token Factory..."):
-                before = sum(usage.values())
+                before = sum(llm_usage.values())
                 out = clean(chat(NANO, system, snippet)) or "(no SQL returned, try again)"
             st.code(out, language="sql")
-            st.caption(f"{sum(usage.values()) - before:,} tokens used. This translation is not "
+            st.caption(f"{sum(llm_usage.values()) - before:,} tokens used. This translation is not "
                        "verified; full runs prove every object against Oracle row by row.")
         except Exception as e:
             st.error(f"Live call unavailable: {e}")
@@ -194,6 +244,69 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 """)
 
 with tabs[5]:
+    st.subheader("Serverless vs dedicated endpoint")
+    st.markdown("""
+| | Serverless (what LakeShift uses today) | Dedicated endpoint |
+|---|---|---|
+| **Pricing** | Per token | Per GPU-hour, billed per minute, only while `Ready` |
+| **Capacity** | Shared, multi-tenant | Reserved for your organisation |
+| **Rate limits** | Dynamic limits apply | None; throughput = the GPUs you deploy |
+| **Region** | Can move with available capacity | Fixed, you choose it (data residency) |
+| **Scaling** | Platform-managed | You set min and max replicas |
+| **Custom weights** | Base models only | Supported for eligible models |
+""")
+    st.markdown("""
+**When LakeShift uses each**
+- **Serverless:** bursty migration waves. Six objects cost cents and nothing runs between waves.
+- **Dedicated:** large bank, insurance or healthcare programmes that need a fixed region for data
+  residency, steady high volume (thousands of objects a night), predictable latency, or a Nano
+  fine-tuned on the customer's own coding standards.
+- The ladder stays the same: Nano can move to a dedicated endpoint while Super and Ultra stay serverless
+  for the rare hard objects. Nemotron 3 Nano is offered as a dedicated template (H100 in eu-north1,
+  H200 in us-central1).
+""")
+    GPU_HOUR = 4.50                                   # H100, nebius.com/prices
+    nano_in, nano_out = PRICE["NVIDIA-Nemotron-3-Nano-30B-A3B"]
+    nano_run = usage["tokens"].get("NVIDIA-Nemotron-3-Nano-30B-A3B", 0)
+    be_tokens = GPU_HOUR / nano_out * 1e6             # output-rate tokens per hour to break even
+    b1, b2, b3 = st.columns(3)
+    b1.metric("1 H100, per hour", f"${GPU_HOUR:.2f}")
+    b2.metric("Breakeven vs serverless Nano", f"{be_tokens / 1e6:.1f}M tokens/hour",
+              f"about {be_tokens / 3600:,.0f} tokens/s sustained", delta_color="off")
+    b3.metric("= full LakeShift runs per hour", f"{be_tokens / nano_run:,.0f}" if nano_run else "n/a")
+    st.caption(f"Breakeven = ${GPU_HOUR:.2f}/GPU-hour / ${nano_out:.2f} per 1M Nano output tokens "
+               f"(worst case; at the ${nano_in:.2f} input rate it is {GPU_HOUR / nano_in:.0f}M tokens/hour). "
+               "Below that volume serverless is cheaper; dedicated is chosen for residency, "
+               "reserved capacity and no rate limits, not price.")
+
+    st.subheader("Switch in 3 steps")
+    st.code("""# 1. Create a dedicated endpoint for nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B (1 GPU, 1 replica)
+# 2. Point LakeShift at it (Super and Ultra stay on serverless)
+$env:NEBIUS_NANO_MODEL = "<routing key from the endpoint card>"
+$env:NEBIUS_DEDICATED_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
+# 3. Same pipeline, same code
+python -m lakeshift.bench --target dedicated --runs 1
+python -m lakeshift run""", language="powershell")
+
+    st.subheader("Benchmark: Nano translation, serverless vs dedicated")
+    bench_rows = []
+    for tgt in ("serverless", "dedicated"):
+        f = M / f"bench_{tgt}.json"
+        if f.exists():
+            b = json.loads(f.read_text(encoding="utf-8")); s = b["summary"]
+            bench_rows.append({"target": tgt, "status": "measured", "calls": s["calls"],
+                               "median latency (s)": s["median_latency_s"],
+                               "median time to first token (s)": s["median_ttft_s"],
+                               "median tokens/s": s["median_tokens_per_s"],
+                               "output tokens": s["total_completion_tokens"],
+                               "max tokens": b.get("max_tokens"), "measured": b["timestamp"]})
+        else:
+            bench_rows.append({"target": tgt, "status": "benchmark pending"})
+    st.dataframe(bench_rows, width="stretch", hide_index=True)
+    st.caption("Same six legacy objects and prompts on both targets. "
+               "Run with `python -m lakeshift.bench --target serverless|dedicated`.")
+
+with tabs[6]:
     st.markdown("""
 Anywhere legacy Oracle logic must move to the cloud, a wrong number is expensive, and the data must stay private:
 
@@ -205,16 +318,17 @@ Anywhere legacy Oracle logic must move to the cloud, a wrong number is expensive
 - **Consultancies and SIs** running Oracle-to-Snowflake programmes: the row-by-row proof report is the sign-off artifact.
 """)
 
-with tabs[6]:
+with tabs[7]:
     st.subheader("Security")
     st.markdown("""
-    - The source Oracle database runs privately: bound to `127.0.0.1` on a private Docker network.
+    - Private mode: the source Oracle runs on the laptop, bound to `127.0.0.1` on a private Docker network.
+    - Judge demo: a separate Oracle on a Google Cloud VM holds only synthetic sample data, uses a non-admin demo user, and live runs need an access code and are capped per day. It is the only database the hosted page can reach.
     - Customer text values are masked before any model call; models only see shapes like `<text#a1b2c3 len=9 Mixed>`.
     - Research is restricted to docs.oracle.com and docs.snowflake.com, and every source is logged.
     - Serverless inference on Nebius Token Factory; a dedicated endpoint is the enterprise option for isolated capacity.
     """)
     st.markdown("""
-**Production design: bring the code to the data.** The hosted page queues a job; a worker next
+**Production design: bring the code to the data.** With real data, the hosted page queues a job; a worker next
 to the database runs the Oracle side locally and returns only the scorecard. Oracle never
 accepts an outside connection and no customer rows leave the site. Options considered: an open
 port (never), a VPN such as Tailscale, Cloudflare Tunnel with Access.

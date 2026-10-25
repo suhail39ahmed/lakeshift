@@ -27,9 +27,17 @@ DDL = [
     orders NUMBER, revenue NUMBER, avg_order NUMBER, rank_in_country NUMBER)""",
 ]
 
+def settings():
+    """Oracle connection settings. Defaults match the local docker-compose setup."""
+    return {"host": os.environ.get("ORACLE_HOST", "127.0.0.1"),
+            "port": int(os.environ.get("ORACLE_PORT", "1521")),
+            "user": os.environ.get("ORACLE_USER", "system"),
+            "service": os.environ.get("ORACLE_SERVICE", "FREEPDB1")}
+
 def connect():
-    return oracledb.connect(user="system", password=os.environ["ORACLE_PASSWORD"],
-                            dsn="localhost:1521/FREEPDB1")
+    c = settings()
+    return oracledb.connect(user=c["user"], password=os.environ["ORACLE_PASSWORD"],
+                            dsn=f"{c['host']}:{c['port']}/{c['service']}")
 
 def reset(cur):
     for t in ["raw_customers", "raw_orders", "raw_referrals", "stg_customers", "dim_customer",
