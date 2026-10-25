@@ -1,6 +1,6 @@
 ﻿import argparse, json, pathlib, time
 from lakeshift import planner, translator, fixer
-from lakeshift.llm import usage
+from lakeshift.llm import usage, usage_report
 
 def main():
     ap = argparse.ArgumentParser(prog="lakeshift")
@@ -35,7 +35,8 @@ def main():
             print(f"         cited: {url}")
     secs = round(time.time() - t0)
     pathlib.Path("migrated/usage.json").write_text(json.dumps(
-        {"tokens": {k.split("/")[-1]: v for k, v in usage.items()}, "seconds": secs}, indent=2),
+        {"tokens": {k.split("/")[-1]: v for k, v in usage.items()}, "seconds": secs,
+         "details": usage_report()}, indent=2),
         encoding="utf-8")
     print(f"  tokens: {sum(usage.values())}   time: {secs}s")
 

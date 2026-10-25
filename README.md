@@ -97,6 +97,16 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 - One API key for every model.
 - Dedicated endpoints for enterprise isolation, with the same code.
 
+## Nebius features used
+
+- **Serverless Token Factory:** pay per token, OpenAI-compatible, one API key for every model.
+- **Model ladder:** Nemotron 3 Nano writes first drafts; Super and then Ultra are called only when the row-by-row proof fails.
+- **Prompt caching:** the fixed instructions come first in every call, so Token Factory serves them from cache (Super $0.06 instead of $0.30, Ultra $0.12 instead of $1.00 per 1M cached input tokens). `migrated/usage.json` records cached tokens per model.
+- **Structured output:** translate and fix calls use a JSON schema `{"sql", "notes"}`, with the text cleaner as a fallback. Turn off with `NEBIUS_STRUCTURED=0`.
+- **Reasoning effort:** `low` for Nano, `medium` for Super, `high` for Ultra (override with `NEBIUS_EFFORT_NANO`, `NEBIUS_EFFORT_SUPER`, `NEBIUS_EFFORT_ULTRA`). Reasoning tokens are recorded per model.
+- **Dedicated endpoint (optional):** set `NEBIUS_DEDICATED_BASE_URL` to move Nano onto reserved capacity with the same code.
+- **Tavily search:** the fixer cites official documentation before each repair.
+
 ## Where this applies
 
 - **Banking and insurance:** loyalty and wallet balances, account hierarchies, regulatory reports where a wrong number is a compliance issue.

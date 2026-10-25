@@ -1,6 +1,6 @@
 import json, pathlib, re
 from concurrent.futures import ThreadPoolExecutor
-from lakeshift.llm import chat, NANO, usage
+from lakeshift.llm import chat_sql, NANO, usage
 from lakeshift.planner import plan
 
 SYSTEM = """You translate Oracle PL/SQL ETL procedures to Snowflake SQL.
@@ -14,7 +14,7 @@ No explanations, no markdown."""
 def translate(obj, folder="legacy"):
     src = pathlib.Path(folder, obj["file"]).read_text(encoding="utf-8")
     prompt = f"Risks to handle: {obj['risks']}\n\nProcedure:\n{src}"
-    sql = chat(NANO, SYSTEM, prompt)
+    sql = chat_sql(NANO, SYSTEM, prompt)
     sql = re.sub(r"^```\w*|```$", "", sql.strip(), flags=re.M).strip()
     out = pathlib.Path("migrated", obj["name"] + ".sql")
     out.parent.mkdir(exist_ok=True)

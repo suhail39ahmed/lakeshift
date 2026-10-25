@@ -8,6 +8,11 @@ PRICE = {  # USD per 1M tokens (input, output), Nebius Token Factory
     "nemotron-3-super-120b-a12b": (0.30, 0.90),
     "Nemotron-3-Ultra-550b-a55b": (1.00, 3.00),
 }
+CACHED_IN = {  # USD per 1M cached input tokens; Nano has no cached price (billed as regular)
+    "NVIDIA-Nemotron-3-Nano-30B-A3B": 0.06,
+    "nemotron-3-super-120b-a12b": 0.06,
+    "Nemotron-3-Ultra-550b-a55b": 0.12,
+}
 LABEL = {"NVIDIA-Nemotron-3-Nano-30B-A3B": "Nano", "nemotron-3-super-120b-a12b": "Super",
          "Nemotron-3-Ultra-550b-a55b": "Ultra"}
 
@@ -44,6 +49,9 @@ def runs_today():
 def count_run():
     today, n = runs_today()
     RUNS_FILE.write_text(json.dumps({today: n + 1}), encoding="utf-8")
+    return n + 1
+
+LIVE_DIR = ROOT / ".live"                      # gitignored: latest live result lives here
 
 def live_workdir():
     """Copy inputs to a scratch folder so a live run never overwrites the committed results."""
@@ -53,6 +61,50 @@ def live_workdir():
     shutil.copytree(M if M.is_absolute() else ROOT / M, work / "migrated",
                     ignore=shutil.ignore_patterns("replies", "rejected"))
     return work
+
+def summarize_live(out_dir, returncode, lines, started):
+    """Build a compact scorecard from a live run's migrated/ folder."""
+    def rd(name):
+        f = out_dir / name
+        try:
+            return json.loads(f.read_text(encoding="utf-8")) if f.exists() else None
+        except (OSError, ValueError) as e:
+            return {"_error": f"{name}: {e}"}
+    rep, flog, use = rd("report.json") or {}, rd("fix_log.json") or [], rd("usage.json") or {}
+    if not isinstance(flog, list):
+        flog = []
+    rows = []
+    for name, r in rep.items():
+        if not isinstance(r, dict):
+            continue
+        fixes = [l.get("model", "").split("/")[-1] for l in flog if l.get("object") == name]
+        by = "first try" if not fixes else (LABEL.get(fixes[-1], fixes[-1])
+                                            if r.get("status") == "PASS" else "unsolved")
+        rows.append({"object": name, "result": r.get("status"), "solved by": by, "rows": r.get("rows", 0)})
+    return {"finished": datetime.datetime.now().isoformat(timespec="seconds"),
+            "started": started, "returncode": returncode,
+            "ok": returncode == 0 and bool(rows) and all(x["result"] == "PASS" for x in rows),
+            "scorecard": rows, "tokens": use.get("tokens", {}),
+            "seconds": use.get("seconds"), "log_tail": lines[-40:]}
+
+def show_live(res):
+    passed = sum(r["result"] == "PASS" for r in res["scorecard"])
+    head = f"Live run {res['finished']}: {passed} / {len(res['scorecard'])} proven equal"
+    (st.success if res["ok"] else st.error)(head)
+    if res["scorecard"]:
+        st.dataframe(res["scorecard"], hide_index=True, use_container_width=True)
+    tok = sum(res["tokens"].values()) if res["tokens"] else 0
+    secs = res.get("seconds")
+    st.caption(f"Tokens: {tok:,}" + (f" ? time: {secs:.0f} s" if isinstance(secs, (int, float)) else ""))
+    if not res["ok"]:
+        st.caption(f"Exit code {res['returncode']}. Last log lines:")
+        st.code("\n".join(res["log_tail"]) or "(no output)")
+
+if "live_result" not in st.session_state:          # survive reruns and app restarts
+    try:
+        st.session_state.live_result = json.loads((LIVE_DIR / "latest.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        st.session_state.live_result = None
 
 with st.sidebar:
     st.header("Run")
@@ -69,26 +121,54 @@ with st.sidebar:
     else:
         _, used = runs_today()
         left = max(RUN_CAP - used, 0)
-        st.caption(f"Live runs left today: {left} / {RUN_CAP}")
+        left_box = st.empty()
+        left_box.caption(f"Live runs left today: {left} / {RUN_CAP}")
         code = os.environ.get("JUDGE_ACCESS_CODE", "")
         entered = st.text_input("Access code", type="password") if code else ""
         allowed = (not code or entered == code) and left > 0
         if code and entered and entered != code:
             st.error("Wrong access code.")
         if st.button("Run migration live", type="primary", disabled=not allowed):
-            count_run()
-            work = live_workdir()
-            env = dict(os.environ, PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""))
-            with st.status("Planning, translating, verifying...", expanded=True) as s:
-                proc = subprocess.Popen([sys.executable, "-m", "lakeshift", "run"], cwd=work, env=env,
-                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                        text=True, encoding="utf-8", errors="replace")
-                for line in proc.stdout:
-                    st.text(line.rstrip())
-                s.update(label="Run finished" if proc.wait() == 0 else "Run failed",
-                         state="complete" if proc.returncode == 0 else "error")
-            st.caption("Live results are shown above; the tabs keep showing the verified run.")
-            shutil.rmtree(work, ignore_errors=True)
+            used = count_run()                         # count before the run starts
+            left_box.caption(f"Live runs left today: {max(RUN_CAP - used, 0)} / {RUN_CAP}")
+            started = datetime.datetime.now().isoformat(timespec="seconds")
+            lines, rc, work = [], None, None
+            try:
+                work = live_workdir()
+                env = dict(os.environ, PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""))
+                with st.status("Planning, translating, verifying...", expanded=True) as s:
+                    proc = subprocess.Popen([sys.executable, "-m", "lakeshift", "run"], cwd=work, env=env,
+                                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                            text=True, encoding="utf-8", errors="replace")
+                    for line in proc.stdout:
+                        lines.append(line.rstrip())
+                        st.text(lines[-1])
+                    rc = proc.wait()
+                    s.update(label="Run finished" if rc == 0 else "Run failed",
+                             state="complete" if rc == 0 else "error", expanded=False)
+                res = summarize_live(work / "migrated", rc, lines, started)
+            except Exception as e:                     # surface, never swallow
+                lines.append(f"{type(e).__name__}: {e}")
+                res = summarize_live(pathlib.Path("/nonexistent"), rc if rc is not None else -1, lines, started)
+            finally:
+                try:
+                    LIVE_DIR.mkdir(exist_ok=True)
+                    if "res" in locals():
+                        (LIVE_DIR / "latest.json").write_text(json.dumps(res, indent=2), encoding="utf-8")
+                        (LIVE_DIR / "latest.log").write_text("\n".join(lines), encoding="utf-8")
+                        if work and (work / "migrated").exists():
+                            shutil.copytree(work / "migrated", LIVE_DIR / "migrated", dirs_exist_ok=True,
+                                            ignore=shutil.ignore_patterns("replies", "rejected"))
+                except OSError as e:
+                    st.warning(f"Could not save the live result: {e}")
+                if work:
+                    shutil.rmtree(work, ignore_errors=True)
+            st.session_state.live_result = res
+            st.rerun()
+    if st.session_state.get("live_result"):
+        st.subheader("Latest live run")
+        show_live(st.session_state.live_result)
+        st.caption("The tabs keep showing the verified run.")
 
 report, log, plan = load("report.json"), load("fix_log.json") or [], load("plan.json")
 if not report:
@@ -231,6 +311,41 @@ with tabs[4]:
     k3.metric("Ladder saving", f"{total_ultra / total:.1f}x cheaper" if total else "n/a")
     st.caption("Worst-case estimate: every token priced at the output rate. Prices are Nebius "
                "Token Factory per 1M tokens.")
+    st.subheader("Nebius features LakeShift uses")
+    det = usage.get("details") or {}
+    if det:
+        cached = sum(d.get("cached", 0) for d in det.values())
+        prompt_t = sum(d.get("prompt", 0) for d in det.values())
+        compl = sum(d.get("completion", 0) for d in det.values())
+        reas = sum(d.get("reasoning", 0) for d in det.values())
+        saved = sum(d.get("cached", 0) / 1e6 * (PRICE[m][0] - CACHED_IN.get(m, PRICE[m][0]))
+                    for m, d in det.items() if m in PRICE)
+        f1, f2, f3 = st.columns(3)
+        f1.metric("Input tokens served from cache", f"{cached:,}",
+                  f"{cached / prompt_t:.0%} of input" if prompt_t else None, delta_color="off")
+        f2.metric("Saved by prompt caching", f"${saved:.4f}")
+        f3.metric("Output spent on reasoning", f"{reas / compl:.0%}" if compl else "n/a",
+                  f"{reas:,} of {compl:,} tokens", delta_color="off")
+        st.dataframe([{"model": LABEL.get(m, m), "calls": d.get("calls", 0),
+                       "input": f"{d.get('prompt', 0):,}", "cached": f"{d.get('cached', 0):,}",
+                       "output": f"{d.get('completion', 0):,}",
+                       "reasoning": f"{d.get('reasoning', 0):,}"} for m, d in det.items()],
+                     width="stretch", hide_index=True)
+        st.caption("Nano has no separate cached price, so its cached tokens save nothing. "
+                   "Nano does not report reasoning tokens; its share counts Super and Ultra only.")
+    else:
+        st.info("Cache and reasoning numbers: measured on next run.")
+    st.markdown("""
+- **Prompt caching.** Every call starts with the same fixed instructions, and Token Factory reuses that
+  prefix automatically. Cached input on Super costs $0.06 instead of $0.30 per 1M tokens, on Ultra $0.12
+  instead of $1.00. In a test, a repeated 1,745-token prompt came back with 1,728 tokens cached.
+- **Structured output.** The models must answer as JSON `{"sql": ..., "notes": ...}`, so LakeShift reads
+  the SQL directly instead of digging it out of free text. If the JSON is ever broken, the old text
+  cleaner is the fallback.
+- **Reasoning effort.** Nemotron thinks before it answers, and those thinking tokens are billed.
+  LakeShift asks Nano for `low` effort on first drafts, Super for `medium` and Ultra for `high`
+  on the hard repairs. The thinking comes back in a separate field, so it never leaks into the SQL.
+""")
     st.subheader("Setup in 3 lines")
     st.code('''from openai import OpenAI
 client = OpenAI(base_url="https://api.tokenfactory.nebius.com/v1/", api_key=NEBIUS_API_KEY)
