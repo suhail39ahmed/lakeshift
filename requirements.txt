@@ -1,0 +1,8 @@
+streamlit==1.66.1
+openai==3.37.0
+python-dotenv==1.2.4
+pandas==2.3.3
+snowflake-connector-python==5.1.0
+oracledb==26.0.1
+tavily-python==0.8.5
+requests==2.34.2
