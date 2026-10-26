@@ -72,7 +72,8 @@ def run_legacy(cur, plan):
         obj = next(o for o in plan["objects"] if o["name"] == name)
         for stmt in statements(pathlib.Path("legacy", obj["file"]).read_text()):
             cur.execute(stmt)                                         # create package/proc as-is
-        cur.execute("SELECT name || ': ' || text FROM user_errors WHERE ROWNUM = 1")
+        cur.execute("SELECT name || ': ' || text FROM user_errors "
+                    "WHERE name = UPPER(:n) AND ROWNUM = 1", n=name)
         if (err := cur.fetchone()):
             raise RuntimeError(f"{obj['file']}: did not compile: {err[0]}")
         cur.callproc(name)                                            # run it

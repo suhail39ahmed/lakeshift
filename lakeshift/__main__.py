@@ -1,6 +1,15 @@
-﻿import argparse, json, pathlib, time
+﻿import argparse, json, os, pathlib, sys, tempfile, time
 from lakeshift import planner, translator, fixer
 from lakeshift.llm import usage, usage_report
+
+LOCK = pathlib.Path(tempfile.gettempdir(), "lakeshift_run.lock")
+
+def take_lock():
+    """Only one run at a time: every run resets the same demo tables."""
+    if LOCK.exists() and time.time() - LOCK.stat().st_mtime < 1200:
+        print("Another migration is already running. Please wait a minute and try again.")
+        sys.exit(1)
+    LOCK.write_text(str(os.getpid()))
 
 def main():
     ap = argparse.ArgumentParser(prog="lakeshift")
@@ -8,6 +17,13 @@ def main():
     ap.add_argument("folder", nargs="?", default="legacy")
     args = ap.parse_args()
 
+    take_lock()
+    try:
+        run(args)
+    finally:
+        LOCK.unlink(missing_ok=True)
+
+def run(args):
     t0 = time.time()
     print("1/3 planning...")
     p = planner.plan(args.folder)
