@@ -1,7 +1,10 @@
 ﻿# Dedicated endpoint benchmark (Nemotron 3 Nano)
 
 Goal: run the LakeShift Nano translation step on a **dedicated** Nebius Token Factory endpoint,
-compare it with serverless, then stop the endpoint. Budget: about 20 minutes, about **$1.50**.
+compare it with serverless, then stop the endpoint.
+
+**Status:** done live on Oct 26, 2026, then stopped. LakeShift runs on serverless by default; the
+dedicated buttons in the app stay greyed out until the two variables below are set. Budget: about 20 minutes, about **$1.50**.
 
 ## Facts (checked against the Nebius docs)
 
@@ -23,7 +26,7 @@ Docs: [overview](https://docs.tokenfactory.nebius.com/ai-models-inference/dedica
 [billing](https://docs.tokenfactory.nebius.com/ai-models-inference/dedicated-endpoints/billing-policy),
 [prices](https://nebius.com/prices).
 
-## Tuesday checklist
+## Checklist
 
 1. **Serverless baseline first (no endpoint running yet):**
    `python -m lakeshift.bench --target serverless --runs 1`

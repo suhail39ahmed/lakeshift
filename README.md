@@ -9,6 +9,8 @@ Snowflake produces exactly what Oracle produces.
 
 **Live demo:** https://lakeshift-nebius-nemotron.streamlit.app/
 
+**Demo video:** <add YouTube link>
+
 ## Why
 
 Most migration tools translate code and hope. Teams then spend weeks finding the cases where
@@ -54,7 +56,9 @@ flowchart LR
 | `load_referral_tree` | `CONNECT BY`, `SYS_CONNECT_BY_PATH`, `CONNECT_BY_ISLEAF` | PASS | Super |
 | `load_order_gaps` | `LAG`, date subtraction, `MONTHS_BETWEEN`, `NUMTODSINTERVAL` | PASS | Nano |
 
-6 of 6 objects proven equal, 5,685 rows compared, about 65k tokens per full run.
+6 of 6 objects proven equal, 5,685 rows compared, 65,441 tokens, 327 seconds end to end on the
+recorded run. A live run on the hosted page takes about 8 minutes on average (it also loads the
+sample data into both databases first).
 
 ## Cost
 
@@ -105,8 +109,18 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 - **Structured output (opt-in):** translate and fix calls can use a JSON schema `{"sql", "notes"}` with `NEBIUS_STRUCTURED=1`. It works on all three models, but a full run scored 4/6 with it on and 6/6 with it off (long procedures squeezed into one JSON string lost quotes and line breaks), so it is off by default.
 - **Fixer hints from real errors:** when Snowflake returns an opaque "internal error" on a recursive query, the fixer tells the model to keep subqueries out of the recursive CTE. This took `load_referral_tree` from unsolved to PASS.
 - **Reasoning effort:** `low` for Nano, `medium` for Super, `high` for Ultra (override with `NEBIUS_EFFORT_NANO`, `NEBIUS_EFFORT_SUPER`, `NEBIUS_EFFORT_ULTRA`). Reasoning tokens are recorded per model.
-- **Dedicated endpoint (optional):** set `NEBIUS_DEDICATED_BASE_URL` to move Nano onto reserved capacity with the same code.
+- **Dedicated endpoint (optional):** set `NEBIUS_DEDICATED_BASE_URL` to move Nano onto reserved capacity with the same code. Benchmarked live on Oct 26, 2026 (Nano 30B-A3B FP8, 1x H100, eu-north1): 307 vs 124 tokens/s, then stopped. Serverless is the default.
 - **Tavily search:** the fixer cites official documentation before each repair.
+
+## Reliability
+
+- Every model call has a 150-second cap and is tried up to 3 times. A slow or dropped reply
+  prints "timed out, retrying" instead of crashing the run.
+- If a first translation still fails, a placeholder query is saved for that object. It fails the
+  row-by-row check on purpose, so the fixer picks it up and repairs it like any other mismatch.
+  One bad call costs a retry, not the whole run.
+- In the live feed, FAIL means "this draft does not match Oracle yet", not that the migration
+  failed. Only the final scorecard counts.
 
 ## Where this applies
 
@@ -119,8 +133,8 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 
 ## Security
 
-- **Private source database.** In private mode, Oracle runs in Docker on a private network,
-  bound to `127.0.0.1` only (`docker-compose.yml`). It is never reachable from outside the machine.
+- **Private source database (for real data).** The included `docker-compose.yml` runs Oracle on a
+  private Docker network bound to `127.0.0.1`, so it is never reachable from outside the machine.
 - **Synthetic judge demo database.** The only Oracle reachable from the internet is a separate
   demo instance on a Google Cloud VM. It holds only synthetic sample data, uses a non-admin demo
   user, and live runs need a judge access code and are capped per day.
@@ -149,8 +163,8 @@ rows leave the site. Options considered:
 
 ### Demo modes
 
-1. **Private mode.** Oracle runs on the laptop, bound to `127.0.0.1` on a private Docker
-   network. This is how the run was recorded and how a team would use LakeShift on real data.
+1. **Private mode.** Oracle runs next to the data, bound to `127.0.0.1` on a private Docker
+   network. This is how a team would use LakeShift on real data.
 2. **Judge demo.** The hosted Streamlit page replays the last verified run, makes live Nemotron
    calls, and can run the full live migration against a synthetic-data Oracle on a Google Cloud
    VM, guarded by a judge access code and a daily run cap.
@@ -205,3 +219,7 @@ which the app shows in the **Dedicated endpoint** tab. Step-by-step guide and co
 The endpoint was stopped right after the benchmark. In the app, **Run migration on dedicated endpoint**
 is live only while `NEBIUS_DEDICATED_BASE_URL` and a `dedicated/...` `NEBIUS_NANO_MODEL` are set, and
 greyed out otherwise (as on the hosted page). Do not put these in Streamlit secrets.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

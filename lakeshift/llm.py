@@ -1,6 +1,6 @@
 ﻿import json, os
 from dotenv import load_dotenv
-from openai import OpenAI, APIStatusError
+from openai import OpenAI, APIStatusError, APITimeoutError, APIConnectionError
 
 load_dotenv()
 SERVERLESS_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
@@ -76,6 +76,12 @@ def chat(model, system, user, retries=2, structured=False):
                 print(f"    {model.split('/')[-1]} rejected {bad} option, continuing without it")
                 continue
             raise
+        except (APITimeoutError, APIConnectionError):
+            # A slow or dropped reply should not crash the run: try again, then give up
+            # on this call only (the caller treats "" as a draft to repair).
+            print(f"    {model.split('/')[-1]} timed out (attempt {attempt + 1}), "
+                  + ("retrying..." if attempt < retries else "moving on"))
+            continue
         _record(model, r.usage)
         text = r.choices[0].message.content    # reasoning comes back separately (reasoning_content)
         if text and text.strip():

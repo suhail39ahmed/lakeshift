@@ -14,7 +14,13 @@ No explanations, no markdown."""
 def translate(obj, folder="legacy"):
     src = pathlib.Path(folder, obj["file"]).read_text(encoding="utf-8")
     prompt = f"Risks to handle: {obj['risks']}\n\nProcedure:\n{src}"
-    sql = chat_sql(NANO, SYSTEM, prompt)
+    try:
+        sql = chat_sql(NANO, SYSTEM, prompt)
+    except Exception as e:      # one failed draft must not stop the other jobs
+        print(f"    translate {obj['name']} failed ({type(e).__name__}), the fixer will retry it")
+        sql = ""
+    if not sql.strip():
+        sql = "SELECT 1 AS translation_failed"   # fails the check, so the fixer repairs it
     sql = re.sub(r"^```\w*|```$", "", sql.strip(), flags=re.M).strip()
     out = pathlib.Path("migrated", obj["name"] + ".sql")
     out.parent.mkdir(exist_ok=True)

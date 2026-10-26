@@ -642,8 +642,8 @@ if section == SECTIONS[2]:
             st.info("Cache and reasoning numbers: measured on next run.")
         st.markdown("""
     - **Prompt caching.** Every call starts with the same fixed instructions, and Token Factory reuses that
-      prefix automatically. Cached input on Super costs $0.06 instead of $0.30 per 1M tokens, on Ultra $0.12
-      instead of $1.00. In a test, a repeated 1,745-token prompt came back with 1,728 tokens cached.
+      prefix automatically. Cached input on Super costs \\$0.06 instead of \\$0.30 per 1M tokens, on Ultra \\$0.12
+      instead of \\$1.00. In a test, a repeated 1,745-token prompt came back with 1,728 tokens cached.
     - **Structured output.** The models must answer as JSON `{"sql": ..., "notes": ...}`, so LakeShift reads
       the SQL directly instead of digging it out of free text. If the JSON is ever broken, the old text
       cleaner is the fallback.
@@ -673,11 +673,11 @@ if section == SECTIONS[2]:
         cc1, cc2 = st.columns(2)
         cc1.metric("Serverless, per month", f"${_srv:,.2f}")
         cc2.metric("Dedicated H100, per month", f"${_ded:,.2f}", f"{_gpu_h:,.1f} GPU-hours of work", delta_color="off")
-        st.markdown(f"Migrating **{_objs:,} objects** with **{_runs} full runs a month** costs about **${_srv:,.2f}** on serverless, "
-                    f"or about **${_ded:,.2f}** on a dedicated H100 if it is switched on only while working. "
+        st.markdown(f"Migrating **{_objs:,} objects** with **{_runs} full runs a month** costs about **\\${_srv:,.2f}** on serverless, "
+                    f"or about **\\${_ded:,.2f}** on a dedicated H100 if it is switched on only while working. "
                     + ("Serverless is cheaper at this volume." if _srv <= _ded else "Dedicated is cheaper at this volume."))
         st.caption(f"Based on this run's measured tokens ({_tok_obj:,.0f} per object, worst case at output prices), "
-                   "307 tokens/s measured on the dedicated H100 and $4.50 per GPU-hour (minimum one hour).")
+                   "307 tokens/s measured on the dedicated H100 and \\$4.50 per GPU-hour (minimum one hour).")
     with n_tabs[1]:
         # --- live translation: a real Nemotron call on Nebius Token Factory ---
         st.write("Paste a small Oracle snippet. Nemotron Nano translates it to Snowflake SQL right now "
@@ -734,8 +734,8 @@ if section == SECTIONS[2]:
         b2.metric("Breakeven vs serverless Nano", f"{be_tokens / 1e6:.1f}M tokens/hour",
                   f"about {be_tokens / 3600:,.0f} tokens/s sustained", delta_color="off")
         b3.metric("= full LakeShift runs per hour", f"{be_tokens / nano_run:,.0f}" if nano_run else "n/a")
-        st.caption(f"Breakeven = ${GPU_HOUR:.2f}/GPU-hour / ${nano_out:.2f} per 1M Nano output tokens "
-                   f"(worst case; at the ${nano_in:.2f} input rate it is {GPU_HOUR / nano_in:.0f}M tokens/hour). "
+        st.caption(f"Breakeven = \\${GPU_HOUR:.2f}/GPU-hour / \\${nano_out:.2f} per 1M Nano output tokens "
+                   f"(worst case; at the \\${nano_in:.2f} input rate it is {GPU_HOUR / nano_in:.0f}M tokens/hour). "
                    "Below that volume serverless is cheaper; dedicated is chosen for residency, "
                    "reserved capacity and no rate limits, not price.")
 
