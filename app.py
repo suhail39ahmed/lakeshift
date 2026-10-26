@@ -254,7 +254,7 @@ def eta_label(pr):
 def show_progress(pr, bar, feed):
     pct, elapsed, left = eta_label(pr)
     msg = pr.get("message", "Working")
-    tail = "done" if pct >= 100 else f"about {fmt_secs(left)} left"
+    tail = "done" if pct >= 100 else f"{fmt_secs(elapsed)} elapsed"
     bar.progress(min(pct, 100) / 100, text=f"{msg}: {pct}% ({tail})")
     ev = pr.get("events", [])[-14:]
     feed.markdown("<div style='background:#f7f9fc;border:1px solid #e3e8ef;border-radius:10px;"
@@ -269,7 +269,7 @@ def html_escape(x):
 def show_other_run(pr):
     pct, elapsed, left = eta_label(pr)
     st.info(f"A live run is already in progress: {pct}% done, started {fmt_secs(elapsed)} ago, "
-            f"about {fmt_secs(left)} left. Its results will appear here when it finishes.")
+            f"Its results will appear here when it finishes.")
     show_progress(pr, st.empty(), st.empty())
     try:
         lines = RUN_LOG.read_text(encoding="utf-8", errors="replace").splitlines()[-6:]
