@@ -52,6 +52,8 @@ def run():
     sqls = {o["name"]: pathlib.Path("migrated", o["name"] + ".sql").read_text(encoding="utf-8")
             for o in plan["objects"]}
     report, log = safe_verify(plan, sqls), []
+    for n, r in report.items():
+        print(f"    snowflake check {n}: {r['status']}")
     evidence = {}
 
     for model in LADDER:

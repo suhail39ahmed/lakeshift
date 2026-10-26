@@ -214,6 +214,72 @@ if "live_result" not in st.session_state:          # survive reruns and app rest
     except (OSError, ValueError):
         st.session_state.live_result = None
 
+PROGRESS_FILE = pathlib.Path(tempfile.gettempdir()) / "lakeshift_progress.json"
+RUN_LOG = pathlib.Path(tempfile.gettempdir()) / "lakeshift_run.log"
+
+def read_progress():
+    try:
+        return json.loads(PROGRESS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+def active_run():
+    """Progress of a run that still holds the lock, or None (stale locks are cleared)."""
+    from lakeshift.__main__ import lock_info
+    try:
+        if not lock_info():
+            return None
+    except Exception:
+        return None
+    return read_progress() or {"percent": 0, "message": "Starting", "events": [],
+                               "started": __import__("time").time()}
+
+def fmt_secs(s):
+    s = max(int(s), 0)
+    return f"{s // 60} min {s % 60} s" if s >= 60 else f"{s} s"
+
+def eta_label(pr):
+    import time as _t
+    pct = max(int(pr.get("percent", 0)), 0)
+    elapsed = _t.time() - float(pr.get("started", _t.time()))
+    typical = (load("usage.json") or {}).get("seconds") or 240
+    if pct >= 100:
+        left = 0
+    elif pct >= 10:
+        left = elapsed * (100 - pct) / pct
+    else:
+        left = max(typical - elapsed, 15)
+    return pct, elapsed, left
+
+def show_progress(pr, bar, feed):
+    pct, elapsed, left = eta_label(pr)
+    msg = pr.get("message", "Working")
+    tail = "done" if pct >= 100 else f"about {fmt_secs(left)} left"
+    bar.progress(min(pct, 100) / 100, text=f"{msg}: {pct}% ({tail})")
+    ev = pr.get("events", [])[-14:]
+    feed.markdown("<div style='background:#f7f9fc;border:1px solid #e3e8ef;border-radius:10px;"
+                  "padding:10px 14px;font-size:.9rem;line-height:1.6'>" +
+                  "".join(f"<div><span style='color:#8a94a6'>{fmt_secs(t)}</span>&nbsp; {html_escape(x)}</div>"
+                          for t, x in ev) + "</div>", unsafe_allow_html=True)
+
+def html_escape(x):
+    import html as _h
+    return _h.escape(str(x))
+
+def show_other_run(pr):
+    pct, elapsed, left = eta_label(pr)
+    st.info(f"A live run is already in progress: {pct}% done, started {fmt_secs(elapsed)} ago, "
+            f"about {fmt_secs(left)} left. Its results will appear here when it finishes.")
+    show_progress(pr, st.empty(), st.empty())
+    try:
+        lines = RUN_LOG.read_text(encoding="utf-8", errors="replace").splitlines()[-6:]
+        if lines:
+            st.code("\n".join(lines))
+    except OSError:
+        pass
+    if st.button("Refresh", key="refresh_run"):
+        st.rerun()
+
 def run_live(env, left_box):
     """Full live run (plan, translate, verify) in a temp copy; env picks serverless or dedicated."""
     used = count_run()                         # count before the run starts
@@ -223,14 +289,34 @@ def run_live(env, left_box):
     try:
         work = live_workdir()
         env = dict(env, PYTHONPATH=str(ROOT) + os.pathsep + os.environ.get("PYTHONPATH", ""))
-        with st.status("Planning, translating, verifying...", expanded=True) as s:
-            proc = subprocess.Popen([sys.executable, "-m", "lakeshift", "run"], cwd=work, env=env,
+        bar, feed = st.empty(), st.empty()
+        show_progress({"percent": 0, "message": "Starting run", "events": [[0, "Started run"]],
+                       "started": __import__("time").time()}, bar, feed)
+        with st.status("Full log", expanded=False) as s:
+            import queue, threading
+            proc = subprocess.Popen([sys.executable, "-u", "-m", "lakeshift", "run"], cwd=work, env=env,
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                     text=True, encoding="utf-8", errors="replace")
-            for line in proc.stdout:
-                lines.append(line.rstrip())
-                st.text(lines[-1])
+            q = queue.Queue()
+            threading.Thread(target=lambda: ([q.put(l) for l in proc.stdout], q.put(None)),
+                             daemon=True).start()
+            eof = False
+            while not eof:
+                try:
+                    line = q.get(timeout=1.5)
+                except queue.Empty:
+                    line = ""
+                if line is None:
+                    eof = True
+                elif line:
+                    lines.append(line.rstrip())
+                    st.text(lines[-1])
+                pr = read_progress()
+                if pr and pr.get("pid") == proc.pid:
+                    show_progress(pr, bar, feed)
             rc = proc.wait()
+            if rc == 3 and any("already running" in l for l in lines):
+                st.session_state["busy_note"] = True
             s.update(label="Run finished" if rc == 0 else "Run failed",
                      state="complete" if rc == 0 else "error", expanded=False)
         res = summarize_live(work / "migrated", rc, lines, started)
@@ -284,10 +370,21 @@ def run_panel():
         st.session_state["peek_ok"] = not code or entered == code
         if code and entered and entered != code:
             st.error("Wrong access code.")
+        other = active_run()
+        if other:
+            allowed = False
+        elif st.session_state.pop("busy_check", False) or st.session_state.pop("busy_note", False):
+            try:                                   # a run finished in another session: show its result
+                st.session_state.live_result = json.loads((LIVE_DIR / "latest.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                pass
         b1, b2 = st.columns(2)
         go_srv = b1.button("Run live migration", type="primary", disabled=not allowed, width="stretch")
         go_ded = b2.button("Run live migration on dedicated", type="primary" if ded_ready else "secondary",
                            disabled=not (allowed and ded_ready), width="stretch", key="run_live_dedicated")
+        if other:
+            st.session_state["busy_check"] = True
+            show_other_run(other)
         if ded_ready:
             b2.caption("Dedicated endpoint connected: Nano runs on the dedicated H100; Super and Ultra stay serverless.")
         else:

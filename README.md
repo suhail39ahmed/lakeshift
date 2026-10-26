@@ -171,6 +171,8 @@ variables in `.env` or Streamlit secrets; all have local defaults, so local use 
 | `JUDGE_ACCESS_CODE` | (none) | If set, the live run button asks for this code |
 | `LIVE_RUNS_PER_DAY` | `10` | Daily cap on live runs |
 
+Only one live run happens at a time, because each run resets the same demo tables. While it runs, the page shows a progress bar with the time left and a plain-words activity feed. Anyone who opens the page meanwhile sees the same progress, and a stuck run is cleared automatically after 10 minutes.
+
 Live runs work in a scratch copy, so the committed `migrated/` results shown on the page are
 never overwritten.
 
