@@ -18,9 +18,13 @@ LABEL = {"NVIDIA-Nemotron-3-Nano-30B-A3B": "Nano", "nemotron-3-super-120b-a12b":
 
 # Hosted deployments keep settings in st.secrets; expose them as env vars for the pipeline.
 try:
-    for _k, _v in st.secrets.items():
-        if isinstance(_v, (str, int, float)):
-            os.environ.setdefault(_k, str(_v))
+    def _export(items):
+        for _k, _v in items:
+            if isinstance(_v, (str, int, float)):
+                os.environ.setdefault(_k, str(_v))
+            elif hasattr(_v, 'items'):            # keys that ended up under a [section]
+                _export(_v.items())
+    _export(st.secrets.items())
 except Exception:
     pass                                       # no secrets file: local run, .env is used
 
