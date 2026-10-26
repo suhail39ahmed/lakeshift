@@ -69,6 +69,11 @@ def run():
             prompt = (f"Oracle source:\n{legacy}\n\nCurrent Snowflake SQL:\n{sqls[n]}\n\n"
                       f"Official documentation evidence:\n{evidence[n][0]}\n\n"
                       f"Verifier report:\n{json.dumps(mask_report(report[n]), ensure_ascii=False)[:4000]}")
+            if "internal error" in str(report[n].get("reason", "")).lower():
+                prompt += ("\n\nHint: Snowflake crashed with an internal error, which usually means "
+                           "a correlated subquery (EXISTS / NOT EXISTS / scalar subquery) inside a "
+                           "recursive CTE. Keep the recursive part to plain joins, then compute flags "
+                           "such as IS_LEAF in the final SELECT, e.g. with a LEFT JOIN or a window function.")
             reply = chat_sql(model, SYSTEM, prompt)
             log_dir = pathlib.Path("migrated", "replies"); log_dir.mkdir(exist_ok=True)
             (log_dir / f"{n}.{model.split('/')[-1]}.txt").write_text(reply or "", encoding="utf-8")

@@ -1,0 +1,31 @@
+{
+  "tokens": {
+    "Nemotron-3-Ultra-550b-a55b": 20722,
+    "NVIDIA-Nemotron-3-Nano-30B-A3B": 29214,
+    "nemotron-3-super-120b-a12b": 10257
+  },
+  "seconds": 229,
+  "details": {
+    "Nemotron-3-Ultra-550b-a55b": {
+      "calls": 4,
+      "prompt": 8008,
+      "cached": 0,
+      "completion": 12714,
+      "reasoning": 11176
+    },
+    "NVIDIA-Nemotron-3-Nano-30B-A3B": {
+      "calls": 10,
+      "prompt": 9910,
+      "cached": 0,
+      "completion": 19304,
+      "reasoning": 0
+    },
+    "nemotron-3-super-120b-a12b": {
+      "calls": 3,
+      "prompt": 6401,
+      "cached": 0,
+      "completion": 3856,
+      "reasoning": 2889
+    }
+  }
+}

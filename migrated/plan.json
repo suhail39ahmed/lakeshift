@@ -10,10 +10,9 @@
         "stg_customers"
       ],
       "risks": [
-        "NVL with empty string semantics (empty string treated as NULL)",
-        "DECODE function (Oracle-specific, null matching behavior)",
-        "INITCAP and TRIM (INITCAP is Oracle-specific)",
-        "TRUNC(date, 'MM') for month truncation"
+        "NVL empty-string semantics (NVL on VARCHAR2 treats empty string as NULL)",
+        "DECODE null matching (DECODE does not match NULL to a search value unless explicitly specified)",
+        "TRUNC(date, 'MM') Oracle-specific date truncation format model"
       ]
     },
     {
@@ -26,8 +25,8 @@
         "dim_customer"
       ],
       "risks": [
-        "MERGE INTO ... USING ... ON ... WHEN MATCHED THEN ... WHEN NOT MATCHED THEN ... (Oracle-specific MERGE syntax)",
-        "SYSDATE for current timestamp"
+        "MERGE statement Oracle-specific syntax (WHEN MATCHED/WHEN NOT MATCHED)",
+        "SYSDATE non-deterministic function"
       ]
     },
     {
@@ -41,11 +40,12 @@
         "fct_sales"
       ],
       "risks": [
-        "NVL(o.amount, 0) for null handling",
-        "TRUNC(date, 'MM') for month truncation",
-        "ADD_MONTHS(TRUNC(SYSDATE, 'YYYY'), -12) for relative date anchoring",
-        "RANK() OVER with ORDER BY SUM(NVL(o.amount, 0)) DESC (aggregate in window ORDER BY, Oracle-specific)",
-        "ROUND(SUM(...), 2) and ROUND(AVG(...), 2)"
+        "NVL on NUMBER (NVL(o.amount,0))",
+        "RANK() OVER window function with PARTITION BY and ORDER BY",
+        "TRUNC(date, 'MM')",
+        "ADD_MONTHS date arithmetic",
+        "SYSDATE non-deterministic",
+        "ROUND on aggregate functions"
       ]
     },
     {
@@ -59,14 +59,13 @@
         "customer_points"
       ],
       "risks": [
-        "Package pkg_loyalty with constant c_cap and function points_for (PL/SQL package)",
-        "NVL(p_amount, 0) in function",
-        "Simple CASE expression (CASE p_tier WHEN ... THEN ... ELSE ... END)",
+        "Procedural row-by-row processing with explicit cursor loop",
+        "Package function call pkg_loyalty.points_for (external dependency)",
+        "GREATEST/LEAST functions for bounding",
+        "NVL on NUMBER",
+        "Exception handling for ZERO_DIVIDE",
         "FLOOR function",
-        "GREATEST(LEAST(...), 0) for bounding",
-        "PL/SQL exception handling for ZERO_DIVIDE",
-        "Division by (r.order_date - v_prev_date) which can be zero",
-        "Cursor FOR loop with procedural logic"
+        "Running balance logic with cap (pkg_loyalty.c_cap)"
       ]
     },
     {
@@ -79,7 +78,8 @@
         "referral_tree"
       ],
       "risks": [
-        "Oracle hierarchical query syntax: CONNECT_BY_ROOT, LEVEL, SYS_CONNECT_BY_PATH, CONNECT_BY_ISLEAF, START WITH ... CONNECT BY PRIOR (proprietary CONNECT BY)"
+        "Oracle proprietary hierarchical query syntax: CONNECT_BY_ROOT, LEVEL, SYS_CONNECT_BY_PATH, CONNECT_BY_ISLEAF, START WITH, CONNECT BY PRIOR",
+        "Non-ANSI standard hierarchical query"
       ]
     },
     {
@@ -94,20 +94,20 @@
       ],
       "risks": [
         "LAG window function",
-        "MONTHS_BETWEEN function (non-standard, possibly custom)",
+        "MONTHS_BETWEEN function (Oracle-specific or custom?)",
         "NUMTODSINTERVAL for interval arithmetic",
-        "NVL on numeric expression (days difference)",
-        "TRUNC(date + interval) for date arithmetic",
-        "AVG(...) OVER (PARTITION BY ...) window function on numeric difference"
+        "NVL on date difference",
+        "AVG OVER PARTITION window function",
+        "TRUNC with date arithmetic"
       ]
     }
   ],
   "run_order": [
     "load_stg_customers",
-    "load_referral_tree",
     "load_dim_customer",
     "load_fct_sales",
     "load_customer_points",
-    "load_order_gaps"
+    "load_order_gaps",
+    "load_referral_tree"
   ]
 }

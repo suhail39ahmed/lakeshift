@@ -1,4 +1,4 @@
-import json, os
+﻿import json, os
 from dotenv import load_dotenv
 from openai import OpenAI, APIStatusError
 
@@ -27,8 +27,8 @@ EFFORT = {NANO: os.getenv("NEBIUS_EFFORT_NANO", "low"),
           ULTRA: os.getenv("NEBIUS_EFFORT_ULTRA", "high")}
 
 # Structured output: the model must reply as JSON {"sql": ..., "notes": ...}.
-# Tested on Nano, Super and Ultra. NEBIUS_STRUCTURED=0 turns it off.
-STRUCTURED = os.getenv("NEBIUS_STRUCTURED", "1") != "0"
+# Off by default: a full run scored lower with it on. NEBIUS_STRUCTURED=1 turns it on.
+STRUCTURED = os.getenv("NEBIUS_STRUCTURED", "0") == "1"
 SQL_SCHEMA = {"type": "json_schema", "json_schema": {
     "name": "sql_answer", "strict": True,
     "schema": {"type": "object",

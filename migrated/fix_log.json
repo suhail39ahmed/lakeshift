@@ -1,69 +1,40 @@
 [
   {
-    "object": "load_stg_customers",
-    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-    "result": "ERROR",
-    "sources": [
-      "https://docs.snowflake.com/en/migrations/snowconvert-docs/translation-references/oracle/basic-elements-of-oracle-sql/literals",
-      "https://docs.snowflake.com/en/sql-reference/functions/trunc2",
-      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure",
-      "https://docs.snowflake.com/en/migrations/snowconvert-docs/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure"
-    ]
-  },
-  {
-    "object": "load_referral_tree",
-    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-    "result": "ERROR",
-    "sources": [
-      "https://docs.snowflake.com/en/sql-reference/constructs/connect-by",
-      "https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/Hierarchical-Queries.html",
-      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Hierarchical-Query-Operators.html",
-      "http://docs.oracle.com/database/121/SQLRF/operators004.htm"
-    ]
-  },
-  {
     "object": "load_dim_customer",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
     "result": "PASS",
-    "sources": [
-      "https://docs.snowflake.com/en/sql-reference/sql/merge",
-      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/MERGE.html"
-    ]
+    "sources": []
   },
   {
     "object": "load_customer_points",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-    "result": "ERROR",
-    "sources": []
+    "result": "FAIL",
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Single-Row-Functions.html",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction.html?utm_cta=website-resource-homepage-promo-card-meta-llama"
+    ]
   },
   {
     "object": "load_order_gaps",
     "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-    "result": "PASS",
+    "result": "FAIL",
     "sources": [
-      "https://docs.snowflake.com/en/sql-reference/functions-window-syntax",
-      "https://docs.oracle.com/cd/E21901_01/timesten.1122/e21642/function.htm"
-    ]
-  },
-  {
-    "object": "load_stg_customers",
-    "model": "nvidia/nemotron-3-super-120b-a12b",
-    "result": "PASS",
-    "sources": [
-      "https://docs.snowflake.com/en/migrations/snowconvert-docs/translation-references/oracle/basic-elements-of-oracle-sql/literals",
-      "https://docs.snowflake.com/en/sql-reference/functions/trunc2",
-      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure",
-      "https://docs.snowflake.com/en/migrations/snowconvert-docs/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure"
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/function-references/oracle",
+      "https://docs.snowflake.com/en/user-guide/functions-window-using",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg?utm_cta=website-thank-you",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg"
     ]
   },
   {
     "object": "load_referral_tree",
-    "model": "nvidia/nemotron-3-super-120b-a12b",
-    "result": "PASS",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "result": "ERROR",
     "sources": [
-      "https://docs.snowflake.com/en/sql-reference/constructs/connect-by",
-      "https://docs.oracle.com/en/database/oracle/oracle-database/18/sqlrf/Hierarchical-Queries.html",
-      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Hierarchical-Query-Operators.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/html/E26088_02/operators004.htm",
       "http://docs.oracle.com/database/121/SQLRF/operators004.htm"
     ]
   },
@@ -71,12 +42,66 @@
     "object": "load_customer_points",
     "model": "nvidia/nemotron-3-super-120b-a12b",
     "result": "FAIL",
-    "sources": []
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Single-Row-Functions.html",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction.html?utm_cta=website-resource-homepage-promo-card-meta-llama"
+    ]
+  },
+  {
+    "object": "load_order_gaps",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "result": "ERROR",
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/function-references/oracle",
+      "https://docs.snowflake.com/en/user-guide/functions-window-using",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg?utm_cta=website-thank-you",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg"
+    ]
+  },
+  {
+    "object": "load_referral_tree",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "result": "ERROR",
+    "sources": [
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/html/E26088_02/operators004.htm",
+      "http://docs.oracle.com/database/121/SQLRF/operators004.htm"
+    ]
   },
   {
     "object": "load_customer_points",
     "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
     "result": "PASS",
-    "sources": []
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/translation-references/oracle/pl-sql-to-snowflake-scripting/create-procedure",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Single-Row-Functions.html",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction",
+      "https://docs.snowflake.com/en/sql-reference/external-functions-introduction.html?utm_cta=website-resource-homepage-promo-card-meta-llama"
+    ]
+  },
+  {
+    "object": "load_order_gaps",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "result": "PASS",
+    "sources": [
+      "https://docs.snowflake.com/en/migrations/aim-for-datawarehouses/code-conversion/function-references/oracle",
+      "https://docs.snowflake.com/en/user-guide/functions-window-using",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg?utm_cta=website-thank-you",
+      "https://docs.snowflake.com/en/sql-reference/functions/avg"
+    ]
+  },
+  {
+    "object": "load_referral_tree",
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "result": "PASS",
+    "sources": [
+      "https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/en/database/oracle/oracle-database/19/sqlrf/Hierarchical-Query-Pseudocolumns.html",
+      "https://docs.oracle.com/html/E26088_02/operators004.htm",
+      "http://docs.oracle.com/database/121/SQLRF/operators004.htm"
+    ]
   }
 ]

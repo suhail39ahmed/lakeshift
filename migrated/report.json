@@ -3,10 +3,6 @@
     "status": "PASS",
     "rows": 178
   },
-  "load_referral_tree": {
-    "status": "PASS",
-    "rows": 200
-  },
   "load_dim_customer": {
     "status": "PASS",
     "rows": 178
@@ -22,5 +18,9 @@
   "load_order_gaps": {
     "status": "PASS",
     "rows": 2402
+  },
+  "load_referral_tree": {
+    "status": "PASS",
+    "rows": 200
   }
 }
