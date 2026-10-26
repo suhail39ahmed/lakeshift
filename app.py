@@ -300,6 +300,7 @@ def run_live(env, left_box):
             q = queue.Queue()
             threading.Thread(target=lambda: ([q.put(l) for l in proc.stdout], q.put(None)),
                              daemon=True).start()
+            log_box = st.empty()                   # one box, not one element per line
             eof = False
             while not eof:
                 try:
@@ -310,7 +311,7 @@ def run_live(env, left_box):
                     eof = True
                 elif line:
                     lines.append(line.rstrip())
-                    st.text(lines[-1])
+                    log_box.code("\n".join(lines[-40:]))
                 pr = read_progress()
                 if pr and pr.get("pid") == proc.pid:
                     show_progress(pr, bar, feed)

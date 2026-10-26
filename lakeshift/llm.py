@@ -6,7 +6,10 @@ load_dotenv()
 SERVERLESS_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
 DEFAULT_NANO = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B"
 
-client = OpenAI(base_url=SERVERLESS_BASE_URL, api_key=os.environ["NEBIUS_API_KEY"])
+# Cap each call so one slow reply cannot stall a run (the library default is 10 minutes).
+TIMEOUT = float(os.getenv("NEBIUS_TIMEOUT", "150"))
+client = OpenAI(base_url=SERVERLESS_BASE_URL, api_key=os.environ["NEBIUS_API_KEY"],
+                timeout=TIMEOUT, max_retries=1)
 
 ULTRA = "nvidia/Nemotron-3-Ultra-550b-a55b"
 NANO = os.getenv("NEBIUS_NANO_MODEL") or DEFAULT_NANO   # dedicated endpoint: its routing key
@@ -14,7 +17,8 @@ SUPER = "nvidia/nemotron-3-super-120b-a12b"
 
 # Optional dedicated endpoint for Nano; Super and Ultra stay on serverless.
 _dedicated = os.getenv("NEBIUS_DEDICATED_BASE_URL")
-nano_client = (OpenAI(base_url=_dedicated, api_key=os.environ["NEBIUS_API_KEY"])
+nano_client = (OpenAI(base_url=_dedicated, api_key=os.environ["NEBIUS_API_KEY"],
+                      timeout=TIMEOUT, max_retries=1)
                if _dedicated else client)
 
 usage = {}      # model -> total tokens (kept for older code and usage.json "tokens")
