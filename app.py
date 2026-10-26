@@ -1,4 +1,4 @@
-﻿"""LakeShift demo page: Oracle PL/SQL to Snowflake, proven row by row."""
+"""LakeShift demo page: Oracle PL/SQL to Snowflake, proven row by row."""
 import datetime, json, os, pathlib, shutil, socket, subprocess, sys, tempfile
 import streamlit as st
 
@@ -24,10 +24,75 @@ try:
 except Exception:
     pass                                       # no secrets file: local run, .env is used
 
-st.set_page_config(page_title="LakeShift", page_icon="ðŸŒŠ", layout="wide")
-st.title("ðŸŒŠ LakeShift")
-st.caption("Legacy Oracle PL/SQL to Snowflake SQL, translated by NVIDIA Nemotron on Nebius "
-           "Token Factory and proven row by row against the original database.")
+st.set_page_config(page_title="LakeShift", page_icon="🌊", layout="wide")
+STYLE = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap');
+:root { --navy:#0b1426; --navy2:#13213d; --teal:#14b8a6; --lime:#76b900; --ink:#e6edf7; }
+html { scroll-behavior:smooth; }
+.stApp { background: radial-gradient(1200px 600px at 10% -10%, #14305a 0%, transparent 60%),
+         radial-gradient(900px 500px at 110% 10%, rgba(20,184,166,.18) 0%, transparent 60%), var(--navy);
+         color:var(--ink); font-family:'Inter',sans-serif; }
+code, pre { font-family:'JetBrains Mono',monospace !important; }
+@keyframes ls-in { from {opacity:0; transform:translateY(18px);} to {opacity:1; transform:none;} }
+@keyframes ls-shine { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+@keyframes ls-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(118,185,0,.55)} 50%{box-shadow:0 0 0 10px rgba(118,185,0,0)} }
+.ls-hero { padding:28px 32px; border-radius:20px; margin-bottom:12px; animation:ls-in .8s ease-out both;
+  background:linear-gradient(120deg, rgba(20,184,166,.22), rgba(118,185,0,.16) 60%, rgba(19,33,61,.6));
+  border:1px solid rgba(118,185,0,.35); box-shadow:0 10px 40px rgba(0,0,0,.35); }
+.ls-hero h1 { margin:0; font-size:3rem; font-weight:800; letter-spacing:-.02em;
+  background:linear-gradient(90deg,#fff,#5eead4,#76b900,#fff); background-size:200% auto;
+  -webkit-background-clip:text; background-clip:text; color:transparent; animation:ls-shine 6s linear infinite; }
+.ls-hero p { margin:.4rem 0 0; font-size:1.1rem; color:#c3d0e4; animation:ls-in 1s .2s ease-out both; }
+.ls-badges span { display:inline-block; margin:12px 8px 0 0; padding:4px 12px; border-radius:999px; font-size:.8rem;
+  background:rgba(118,185,0,.15); border:1px solid rgba(118,185,0,.5); color:#cdf28a; }
+[data-testid="stMetric"] { background:linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.02));
+  border:1px solid rgba(94,234,212,.25); border-radius:16px; padding:16px 18px; backdrop-filter:blur(8px);
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s; animation:ls-in .6s ease-out both; }
+[data-testid="stMetric"]:hover { transform:translateY(-5px); border-color:var(--lime);
+  box-shadow:0 12px 30px rgba(118,185,0,.25); }
+[data-testid="stMetricValue"] { color:#d9f99d; font-weight:800; }
+.stTabs [data-baseweb="tab-list"] { gap:6px; border-bottom:1px solid rgba(255,255,255,.08); }
+.stTabs [data-baseweb="tab"] { border-radius:10px 10px 0 0; padding:10px 16px; transition:background .2s, color .2s; }
+.stTabs [data-baseweb="tab"]:hover { background:rgba(20,184,166,.12); color:#5eead4; }
+.stTabs [aria-selected="true"] { color:#d9f99d !important; }
+.stTabs [data-baseweb="tab-highlight"] { background:linear-gradient(90deg,var(--teal),var(--lime)) !important;
+  height:3px !important; transition:all .35s cubic-bezier(.4,0,.2,1) !important; }
+.stTabs [data-baseweb="tab-panel"] { animation:ls-in .5s ease-out both; }
+[data-testid="stImage"] img, [data-testid="stImage"] { border-radius:16px; }
+[data-testid="stImage"] { overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.45); }
+[data-testid="stImage"] img { transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+[data-testid="stImage"]:hover img { transform:scale(1.05); }
+.stButton > button { border-radius:12px; font-weight:600; border:1px solid rgba(94,234,212,.4);
+  transition:transform .2s ease, box-shadow .2s ease, filter .2s; }
+.stButton > button:hover:enabled { transform:translateY(-2px); box-shadow:0 8px 22px rgba(20,184,166,.3); }
+.stButton > button[kind="primary"] { background:linear-gradient(90deg,var(--teal),var(--lime)); color:#06121f; border:none; }
+.stButton > button[kind="primary"]:enabled { animation:ls-pulse 2.4s infinite; }
+.stButton > button[kind="primary"]:hover:enabled { filter:brightness(1.1); }
+.stButton > button:disabled { opacity:.45; }
+[data-testid="stSidebar"] { background:linear-gradient(180deg,#0a1222 0%,#10243f 70%,#0f2a2a 100%);
+  border-right:1px solid rgba(118,185,0,.2); }
+[data-testid="stDataFrame"], [data-testid="stTable"] { border-radius:14px; overflow:hidden;
+  border:1px solid rgba(255,255,255,.08); box-shadow:0 6px 24px rgba(0,0,0,.3); }
+[data-testid="stTable"] tr { transition:background .15s; }
+[data-testid="stTable"] tr:hover { background:rgba(118,185,0,.12); }
+[data-testid="stAlert"], [data-testid="stExpander"], [data-testid="stStatusWidget"], details {
+  border-radius:14px !important; animation:ls-in .5s ease-out both; }
+[data-testid="stExpander"] { border:1px solid rgba(94,234,212,.2) !important; transition:border-color .2s; }
+[data-testid="stExpander"]:hover { border-color:rgba(118,185,0,.5) !important; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+}
+</style>
+"""
+st.markdown(STYLE, unsafe_allow_html=True)
+st.markdown(
+    '<div class="ls-hero"><h1>\U0001f30a LakeShift</h1>'
+    '<p>Legacy Oracle PL/SQL to Snowflake SQL, translated by NVIDIA Nemotron on Nebius '
+    'Token Factory and proven row by row against the original database.</p>'
+    '<div class="ls-badges"><span>Nemotron Nano \u00b7 Super \u00b7 Ultra</span><span>Nebius Token Factory</span>'
+    '<span>Row-by-row proof</span><span>Zero raw values to the model</span></div></div>',
+    unsafe_allow_html=True)
 
 def load(name):
     p = M / name
