@@ -1,0 +1,70 @@
+{
+  "target": "dedicated",
+  "model": "dedicated Nano",
+  "max_tokens": 12000,
+  "timestamp": "2026-10-26T10:01:56",
+  "summary": {
+    "calls": 6,
+    "median_latency_s": 8.23,
+    "median_ttft_s": 0.726,
+    "median_tokens_per_s": 307.4,
+    "total_prompt_tokens": 2451,
+    "total_completion_tokens": 13966
+  },
+  "calls": [
+    {
+      "latency_s": 37.288,
+      "ttft_s": 32.366,
+      "prompt_tokens": 323,
+      "completion_tokens": 1516,
+      "tokens_per_s": 308.0,
+      "object": "load_stg_customers",
+      "run": 1
+    },
+    {
+      "latency_s": 7.216,
+      "ttft_s": 0.726,
+      "prompt_tokens": 274,
+      "completion_tokens": 1996,
+      "tokens_per_s": 307.5,
+      "object": "load_dim_customer",
+      "run": 1
+    },
+    {
+      "latency_s": 3.757,
+      "ttft_s": 0.723,
+      "prompt_tokens": 393,
+      "completion_tokens": 934,
+      "tokens_per_s": 307.8,
+      "object": "load_fct_sales",
+      "run": 1
+    },
+    {
+      "latency_s": 19.069,
+      "ttft_s": 0.725,
+      "prompt_tokens": 757,
+      "completion_tokens": 5623,
+      "tokens_per_s": 306.5,
+      "object": "load_customer_points",
+      "run": 1
+    },
+    {
+      "latency_s": 4.911,
+      "ttft_s": 0.716,
+      "prompt_tokens": 277,
+      "completion_tokens": 1289,
+      "tokens_per_s": 307.3,
+      "object": "load_referral_tree",
+      "run": 1
+    },
+    {
+      "latency_s": 9.244,
+      "ttft_s": 0.755,
+      "prompt_tokens": 427,
+      "completion_tokens": 2608,
+      "tokens_per_s": 307.2,
+      "object": "load_order_gaps",
+      "run": 1
+    }
+  ]
+}

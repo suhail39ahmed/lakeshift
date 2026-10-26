@@ -1,4 +1,4 @@
-"""LakeShift demo page: Oracle PL/SQL to Snowflake, proven row by row."""
+﻿"""LakeShift demo page: Oracle PL/SQL to Snowflake, proven row by row."""
 import datetime, json, os, pathlib, shutil, socket, subprocess, sys, tempfile
 import streamlit as st
 
@@ -24,8 +24,8 @@ try:
 except Exception:
     pass                                       # no secrets file: local run, .env is used
 
-st.set_page_config(page_title="LakeShift", page_icon="🌊", layout="wide")
-st.title("🌊 LakeShift")
+st.set_page_config(page_title="LakeShift", page_icon="ðŸŒŠ", layout="wide")
+st.title("ðŸŒŠ LakeShift")
 st.caption("Legacy Oracle PL/SQL to Snowflake SQL, translated by NVIDIA Nemotron on Nebius "
            "Token Factory and proven row by row against the original database.")
 
@@ -402,6 +402,13 @@ $env:NEBIUS_DEDICATED_BASE_URL = "https://api.tokenfactory.nebius.com/v1/"
 # 3. Same pipeline, same code
 python -m lakeshift.bench --target dedicated --runs 1
 python -m lakeshift run""", language="powershell")
+
+    st.subheader("Run on dedicated endpoint")
+    st.button("Run migration on dedicated endpoint", disabled=True, key="run_dedicated",
+              help="Locked: the endpoint is stopped to save GPU cost.")
+    st.info("This run was done live on Oct 26, 2026 on a dedicated Nemotron 3 Nano endpoint "
+            "(1x H100, eu-north1) and the endpoint was then stopped, because it bills per GPU-hour "
+            "while running. The measured results are below; the live demo above uses serverless.")
 
     st.subheader("Benchmark: Nano translation, serverless vs dedicated")
     bench_rows = []

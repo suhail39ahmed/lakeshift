@@ -1,24 +1,69 @@
 {
   "target": "serverless",
   "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
-  "max_tokens": 1500,
-  "timestamp": "2026-10-25T15:29:18",
+  "max_tokens": 12000,
+  "timestamp": "2026-10-26T10:04:44",
   "summary": {
-    "calls": 1,
-    "median_latency_s": 12.858,
-    "median_ttft_s": 1.098,
-    "median_tokens_per_s": 127.5,
-    "total_prompt_tokens": 324,
-    "total_completion_tokens": 1500
+    "calls": 6,
+    "median_latency_s": 12.125,
+    "median_ttft_s": 0.819,
+    "median_tokens_per_s": 124.1,
+    "total_prompt_tokens": 2451,
+    "total_completion_tokens": 9984
   },
   "calls": [
     {
-      "latency_s": 12.858,
-      "ttft_s": 1.098,
-      "prompt_tokens": 324,
-      "completion_tokens": 1500,
-      "tokens_per_s": 127.5,
+      "latency_s": 9.612,
+      "ttft_s": 0.985,
+      "prompt_tokens": 323,
+      "completion_tokens": 998,
+      "tokens_per_s": 115.7,
       "object": "load_stg_customers",
+      "run": 1
+    },
+    {
+      "latency_s": 13.517,
+      "ttft_s": 0.825,
+      "prompt_tokens": 274,
+      "completion_tokens": 1567,
+      "tokens_per_s": 123.5,
+      "object": "load_dim_customer",
+      "run": 1
+    },
+    {
+      "latency_s": 9.34,
+      "ttft_s": 0.767,
+      "prompt_tokens": 393,
+      "completion_tokens": 1098,
+      "tokens_per_s": 128.1,
+      "object": "load_fct_sales",
+      "run": 1
+    },
+    {
+      "latency_s": 29.506,
+      "ttft_s": 0.804,
+      "prompt_tokens": 757,
+      "completion_tokens": 3485,
+      "tokens_per_s": 121.4,
+      "object": "load_customer_points",
+      "run": 1
+    },
+    {
+      "latency_s": 10.733,
+      "ttft_s": 0.822,
+      "prompt_tokens": 277,
+      "completion_tokens": 1241,
+      "tokens_per_s": 125.2,
+      "object": "load_referral_tree",
+      "run": 1
+    },
+    {
+      "latency_s": 13.61,
+      "ttft_s": 0.815,
+      "prompt_tokens": 427,
+      "completion_tokens": 1595,
+      "tokens_per_s": 124.7,
+      "object": "load_order_gaps",
       "run": 1
     }
   ]
