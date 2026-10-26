@@ -25,6 +25,11 @@ def pid_alive(pid):
         ctypes.windll.kernel32.GetExitCodeProcess(h, ctypes.byref(code))
         ctypes.windll.kernel32.CloseHandle(h)
         return code.value == 259     # STILL_ACTIVE
+    try:                                 # a finished but unreaped process is not running
+        if pathlib.Path(f"/proc/{pid}/stat").read_text().split(") ")[-1][:1] in "ZX":
+            return False
+    except OSError:
+        pass
     try:
         os.kill(pid, 0)
     except ProcessLookupError:

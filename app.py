@@ -293,28 +293,28 @@ def run_live(env, left_box):
         show_progress({"percent": 0, "message": "Starting run", "events": [[0, "Started run"]],
                        "started": __import__("time").time()}, bar, feed)
         with st.status("Full log", expanded=False) as s:
-            import queue, threading
+            # Output goes to a file, never a pipe: if this page is refreshed or closed,
+            # the run can still write and finish instead of blocking on a full pipe.
+            out_path = work / "run_output.log"
+            out = open(out_path, "w", encoding="utf-8")
             proc = subprocess.Popen([sys.executable, "-u", "-m", "lakeshift", "run"], cwd=work, env=env,
-                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                    text=True, encoding="utf-8", errors="replace")
-            q = queue.Queue()
-            threading.Thread(target=lambda: ([q.put(l) for l in proc.stdout], q.put(None)),
-                             daemon=True).start()
+                                    stdout=out, stderr=subprocess.STDOUT)
+            out.close()
             log_box = st.empty()                   # one box, not one element per line
-            eof = False
-            while not eof:
-                try:
-                    line = q.get(timeout=1.5)
-                except queue.Empty:
-                    line = ""
-                if line is None:
-                    eof = True
-                elif line:
-                    lines.append(line.rstrip())
+            reader = open(out_path, "r", encoding="utf-8", errors="replace")
+            while True:
+                done = proc.poll() is not None
+                new = reader.read()
+                if new:
+                    lines.extend(l.rstrip() for l in new.splitlines() if l.strip())
                     log_box.code("\n".join(lines[-40:]))
                 pr = read_progress()
                 if pr and pr.get("pid") == proc.pid:
                     show_progress(pr, bar, feed)
+                if done:
+                    break
+                __import__("time").sleep(1.5)
+            reader.close()
             rc = proc.wait()
             if rc == 3 and any("already running" in l for l in lines):
                 st.session_state["busy_note"] = True
@@ -335,7 +335,7 @@ def run_live(env, left_box):
                                     ignore=shutil.ignore_patterns("replies", "rejected"))
         except OSError as e:
             st.warning(f"Could not save the live result: {e}")
-        if work:
+        if work and ("proc" not in locals() or proc.poll() is not None):   # never pull files from a running run
             shutil.rmtree(work, ignore_errors=True)
     st.session_state.live_result = res
     st.rerun()
