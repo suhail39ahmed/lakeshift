@@ -404,11 +404,27 @@ python -m lakeshift.bench --target dedicated --runs 1
 python -m lakeshift run""", language="powershell")
 
     st.subheader("Run on dedicated endpoint")
-    st.button("Run migration on dedicated endpoint", disabled=True, key="run_dedicated",
-              help="Locked: the endpoint is stopped to save GPU cost.")
-    st.info("This run was done live on Oct 26, 2026 on a dedicated Nemotron 3 Nano endpoint "
-            "(1x H100, eu-north1) and the endpoint was then stopped, because it bills per GPU-hour "
-            "while running. The measured results are below; the live demo above uses serverless.")
+    ded_key = os.environ.get("NEBIUS_NANO_MODEL", "")
+    ded_on = bool(os.environ.get("NEBIUS_DEDICATED_BASE_URL")) and ded_key.startswith("dedicated/")
+    if ded_on:
+        st.success(f"Dedicated endpoint connected: `{ded_key}`. Nano calls (here and in "
+                   "\"Run migration live\") go to the dedicated H100; Super and Ultra stay serverless.")
+    if st.button("Run migration on dedicated endpoint", type="primary" if ded_on else "secondary",
+                 disabled=not ded_on, key="run_dedicated",
+                 help=None if ded_on else "Locked: the endpoint is stopped to save GPU cost."):
+        with st.status("Running Nano translation on the dedicated endpoint...", expanded=True) as stat:
+            proc = subprocess.Popen([sys.executable, "-m", "lakeshift.bench", "--target", "dedicated",
+                                     "--runs", "1"], env=os.environ.copy(), stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT, text=True, encoding="utf-8", errors="replace")
+            for line in proc.stdout:
+                st.text(line.rstrip())
+            proc.wait()
+            stat.update(label="Dedicated run finished" if proc.returncode == 0 else "Dedicated run failed",
+                        state="complete" if proc.returncode == 0 else "error")
+    if not ded_on:
+        st.info("This run was done live on Oct 26, 2026 on a dedicated Nemotron 3 Nano endpoint "
+                "(1x H100, eu-north1) and the endpoint was then stopped, because it bills per GPU-hour "
+                "while running. The measured results are below; the live demo above uses serverless.")
 
     st.subheader("Benchmark: Nano translation, serverless vs dedicated")
     bench_rows = []

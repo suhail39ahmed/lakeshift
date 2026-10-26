@@ -1,4 +1,4 @@
-# LakeShift
+﻿# LakeShift
 
 **Migrate legacy Oracle PL/SQL to Snowflake SQL, and prove every result row by row.**
 
@@ -102,7 +102,8 @@ reply = client.chat.completions.create(model="nvidia/NVIDIA-Nemotron-3-Nano-30B-
 - **Serverless Token Factory:** pay per token, OpenAI-compatible, one API key for every model.
 - **Model ladder:** Nemotron 3 Nano writes first drafts; Super and then Ultra are called only when the row-by-row proof fails.
 - **Prompt caching:** the fixed instructions come first in every call, so Token Factory serves them from cache (Super $0.06 instead of $0.30, Ultra $0.12 instead of $1.00 per 1M cached input tokens). `migrated/usage.json` records cached tokens per model.
-- **Structured output:** translate and fix calls use a JSON schema `{"sql", "notes"}`, with the text cleaner as a fallback. Turn off with `NEBIUS_STRUCTURED=0`.
+- **Structured output (opt-in):** translate and fix calls can use a JSON schema `{"sql", "notes"}` with `NEBIUS_STRUCTURED=1`. It works on all three models, but a full run scored 4/6 with it on and 6/6 with it off (long procedures squeezed into one JSON string lost quotes and line breaks), so it is off by default.
+- **Fixer hints from real errors:** when Snowflake returns an opaque "internal error" on a recursive query, the fixer tells the model to keep subqueries out of the recursive CTE. This took `load_referral_tree` from unsolved to PASS.
 - **Reasoning effort:** `low` for Nano, `medium` for Super, `high` for Ultra (override with `NEBIUS_EFFORT_NANO`, `NEBIUS_EFFORT_SUPER`, `NEBIUS_EFFORT_ULTRA`). Reasoning tokens are recorded per model.
 - **Dedicated endpoint (optional):** set `NEBIUS_DEDICATED_BASE_URL` to move Nano onto reserved capacity with the same code.
 - **Tavily search:** the fixer cites official documentation before each repair.
@@ -189,3 +190,16 @@ python -m lakeshift.bench --target dedicated --runs 1
 translation step (latency, time to first token, tokens/s) and writes `migrated/bench_<target>.json`,
 which the app shows in the **Dedicated endpoint** tab. Step-by-step guide and cost:
 [docs/dedicated-endpoint.md](docs/dedicated-endpoint.md).
+
+**Measured on Oct 26, 2026** (Nano translating all 6 objects, same prompts, 1 run each):
+
+| | Serverless | Dedicated (1x H100, eu-north1) |
+|---|---|---|
+| Median tokens/s | 124 | **307 (about 2.5x)** |
+| Median time per object | 12.1 s | **8.2 s** |
+| Median time to first token | 0.82 s | **0.73 s** |
+| Cold start | none | 32 s on the first call |
+
+The endpoint was stopped right after the benchmark. In the app, **Run migration on dedicated endpoint**
+is live only while `NEBIUS_DEDICATED_BASE_URL` and a `dedicated/...` `NEBIUS_NANO_MODEL` are set, and
+greyed out otherwise (as on the hosted page). Do not put these in Streamlit secrets.

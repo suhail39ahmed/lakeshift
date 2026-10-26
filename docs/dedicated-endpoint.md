@@ -1,4 +1,4 @@
-# Dedicated endpoint benchmark (Nemotron 3 Nano)
+﻿# Dedicated endpoint benchmark (Nemotron 3 Nano)
 
 Goal: run the LakeShift Nano translation step on a **dedicated** Nebius Token Factory endpoint,
 compare it with serverless, then stop the endpoint. Budget: about 20 minutes, about **$1.50**.
@@ -38,7 +38,8 @@ Docs: [overview](https://docs.tokenfactory.nebius.com/ai-models-inference/dedica
 4. **Run the benchmark** (same prompts, same settings):
    `python -m lakeshift.bench --target dedicated --runs 1`
    A 404 right after `Ready` means routing is still warming up; wait a minute and retry.
-5. **Optional, for the video:** `streamlit run app.py` and show the Dedicated endpoint section.
+5. **Optional, for the video:** with the variables set, `streamlit run app.py`, open the Dedicated endpoint
+   tab and click **Run migration on dedicated endpoint** (live only while the variables are set).
 6. **STOP the endpoint** right away: open the endpoint card, then Stop (or Delete). Wait until it shows
    `Stopped` / `Not ready`.
 7. **Screenshot the stopped status** and save it as `docs/dedicated-stopped.png`.
@@ -49,3 +50,16 @@ Docs: [overview](https://docs.tokenfactory.nebius.com/ai-models-inference/dedica
 9. Commit `migrated/bench_serverless.json`, `migrated/bench_dedicated.json` and the screenshot.
 
 Expected cost: about **$1.50** for 20 minutes on 1 H100. Leaving it on overnight costs over $50.
+
+
+## Results (Oct 26, 2026)
+
+| | Serverless | Dedicated (1x H100) |
+|---|---|---|
+| Median tokens/s | 124 | 307 |
+| Median time per object | 12.1 s | 8.2 s |
+| Median time to first token | 0.82 s | 0.73 s |
+| Cold start | none | 32 s on the first call |
+
+About 2.5x faster generation. For LakeShift's bursty workload serverless stays cheaper; dedicated pays off only at roughly 460+ full runs per hour.
+
