@@ -93,6 +93,7 @@ div.st-key-step [role="radiogroup"] > label:hover { transform:translateY(-2px); 
 div.st-key-step [role="radiogroup"] > label:has(input:checked) { background:linear-gradient(90deg,#4F46E5,#06B6D4); border-color:transparent; }
 div.st-key-step [role="radiogroup"] > label:has(input:checked) p { color:#FFFFFF; }
 div.st-key-step [role="radiogroup"] > label p { font-weight:600; color:#0F172A; }
+.ls-warn { display:inline-block; padding:2px 10px; border-radius:999px; background:#FEF3C7; color:#92400E; border:1px solid #F59E0B; font-weight:700; }
 .ls-chip { display:inline-block; padding:2px 10px; border-radius:999px; background:#EEF2FF; color:#3730A3; border:1px solid #C7D2FE; font-weight:600; }
 .ls-fail { display:inline-block; padding:2px 10px; border-radius:999px; background:#FEE2E2; color:#991B1B; border:1px solid #FCA5A5; font-weight:700; }
 div.st-key-section [role="radiogroup"] > label p { font-size:1.02rem; font-weight:700; color:var(--ink); text-align:center; }
@@ -268,6 +269,7 @@ def run_panel():
              "verifies everything again against the demo Oracle database.")
     if not oracle_here:
         st.caption("Demo Oracle not reachable from here, so live full runs are off.")
+        st.session_state["peek_ok"] = not os.environ.get("JUDGE_ACCESS_CODE", "")
         b1, b2 = st.columns(2)
         b1.button("Run live migration", type="primary", disabled=True, width="stretch")
         b2.button("Run live migration on dedicated", disabled=True, width="stretch")
@@ -279,6 +281,7 @@ def run_panel():
         left_box = st.empty()
         left_box.caption(f"Live runs left today: {left} / {RUN_CAP}")
         allowed = (not code or entered == code) and left > 0
+        st.session_state["peek_ok"] = not code or entered == code
         if code and entered and entered != code:
             st.error("Wrong access code.")
         b1, b2 = st.columns(2)
@@ -298,6 +301,65 @@ def run_panel():
         st.markdown("#### Latest live run")
         show_live(st.session_state.live_result)
         st.caption("The scorecard below keeps showing the verified run.")
+
+def _peek_side(kind, table):
+    """Read-only peek: a row count and the first 10 rows, ordered by the first column."""
+    import re as _re
+    if not _re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", table):
+        raise ValueError("invalid table name")
+    q = '"' + table.upper() + '"'
+    if kind == "oracle":
+        from lakeshift.oracle_ref import connect as _connect
+        first = f"SELECT * FROM {q} ORDER BY 1 FETCH FIRST 10 ROWS ONLY"
+    else:
+        from lakeshift.warehouse import connect as _connect
+        first = f"SELECT * FROM {q} ORDER BY 1 LIMIT 10"
+    conn = _connect()
+    try:
+        cur = conn.cursor()
+        cur.execute(f"SELECT COUNT(*) FROM {q}")
+        n = int(cur.fetchone()[0])
+        cur.execute(first)
+        cols = [d[0] for d in cur.description]
+        rows = [dict(zip(cols, r)) for r in cur.fetchall()]
+        return {"count": n, "rows": rows}
+    finally:
+        conn.close()
+
+def peek_panel(tables):
+    st.markdown("### \U0001f50d Peek at both databases")
+    st.write("Pick a table the migration writes and load it from both sides: the original Oracle and the migrated Snowflake.")
+    ok = st.session_state.get("peek_ok", not os.environ.get("JUDGE_ACCESS_CODE", ""))
+    t = st.selectbox("Target table", tables, key="peek_table", disabled=not ok or not tables)
+    go = st.button("Load", key="peek_load", disabled=not ok or not tables)
+    if not ok:
+        st.caption("Enter the access code above to peek at the live databases")
+        return
+    if go and t in tables:
+        res = {}
+        for kind in ("oracle", "snowflake"):
+            try:
+                res[kind] = _peek_side(kind, t)
+            except Exception as e:                     # never show connection details
+                res[kind] = {"error": type(e).__name__}
+        st.session_state["peek"] = {"table": t, **res}
+    pk = st.session_state.get("peek")
+    if not pk:
+        return
+    o, w = pk.get("oracle", {}), pk.get("snowflake", {})
+    if "count" in o and "count" in w:
+        same = o["count"] == w["count"]
+        st.markdown(f'<span class="{"ls-pass" if same else "ls-warn"}">{"PASS: row counts match" if same else "Row counts differ"}</span>'
+                    f' &nbsp; <span class="ls-chip">{pk["table"]}</span>', unsafe_allow_html=True)
+    c1, c2 = st.columns(2)
+    for col, title, side in ((c1, "Oracle (source, Google Cloud)", o), (c2, "Snowflake (migrated)", w)):
+        with col:
+            st.markdown(f"#### {title}")
+            if "error" in side:
+                st.warning(f"Could not reach this database right now ({side['error']}).")
+            else:
+                st.metric("Rows", f"{side['count']:,}")
+                st.dataframe(side["rows"], hide_index=True, width="stretch")
 
 with st.sidebar:
     st.markdown("### \U0001f30a LakeShift")
@@ -334,6 +396,9 @@ section = st.radio("Section", SECTIONS, horizontal=True, key="section", label_vi
 if section == SECTIONS[0]:
     with st.container(border=True):
         run_panel()
+    _peek_tables = sorted({w for o in (plan or {}).get("objects", []) for w in (o.get("writes") or o.get("targets") or [])})
+    with st.container(border=True):
+        peek_panel(_peek_tables)
     # --- scorecard ---
     st.subheader("Scorecard")
     rows = []
