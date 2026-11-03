@@ -1,5 +1,7 @@
 ﻿# LakeShift
 
+![LakeShift: PL/SQL to Snowflake SQL, proven row by row](docs/cover.jpg)
+
 **Migrate legacy Oracle PL/SQL to Snowflake SQL, and prove every result row by row.**
 
 LakeShift reads legacy Oracle ETL code (procedures, packages, cursor loops, hierarchical
@@ -44,6 +46,42 @@ flowchart LR
    through Tavily, and every source is cited in the scorecard.
 5. **Fixer** sends the verifier's evidence back to a model and climbs a ladder only when
    needed: Nemotron 3 Nano, then Super, then Ultra.
+
+## Design & Engineering
+
+I designed LakeShift around a simple idea: **the legacy Oracle database is the answer key**. A translation is only done when Snowflake returns exactly the same rows.
+
+**Design goals**
+
+- Translate real Oracle ETL (packages, cursor loops, `CONNECT BY`, `MERGE`) to Snowflake SQL.
+- Prove each object row by row, including day-2 incremental scenarios.
+- Spend big-model tokens only on the objects that need them.
+- Never send customer data to a model.
+
+**Key design decisions and trade-offs**
+
+| Decision | Why | Trade-off |
+|---|---|---|
+| Verifier diffs full result sets in Oracle vs Snowflake | Catches semantic differences (`''` vs NULL, date math) that code review misses | Needs both databases and sample data available |
+| Model ladder: Nano → Super → Ultra, only on failure | Most objects pass cheaply; hard ones get escalated | Hard objects take more rounds and time |
+| Researcher limited to official Oracle and Snowflake docs (Tavily), all sources cited | Fixes are grounded in documented behaviour | Misses community workarounds |
+| Mask text values before any model call (`lakeshift/privacy.py`) | Models see shapes, not names or emails | Some fixes need more rounds without real text |
+| Failed first translation becomes a placeholder that fails on purpose | One bad call costs a retry, not the whole run | A slower path for that object |
+| Production: "bring the code to the data" | Oracle never accepts outside connections; only the scorecard leaves the site | Needs a worker deployed next to the database |
+
+**Engineering details**
+
+- **Stack:** Python, NVIDIA Nemotron models on Nebius Token Factory (OpenAI-compatible), Oracle in Docker, Snowflake, Tavily, Streamlit (`app.py`).
+- **Code layout:** `lakeshift/planner.py`, `translator.py`, `verifier.py`, `researcher.py`, `fixer.py`, `oracle_ref.py`, `warehouse.py`, `privacy.py`, `bench.py`.
+- **Reliability:** 150 s cap per model call, up to 3 tries each.
+- **Deploy:** hosted Streamlit demo with a judge access code and daily run cap; local private mode via `docker-compose.yml` bound to `127.0.0.1`.
+- **Not yet:** automated unit tests and CI; the row-by-row verifier is the main safety net.
+
+**What I'd do next**
+
+- The production job queue and on-prem worker described in [Production design](#production-design-bring-the-code-to-the-data).
+- Unit tests for the privacy masker and verifier, run in CI.
+- A larger benchmark of real-world PL/SQL patterns.
 
 ## Results (latest run)
 
